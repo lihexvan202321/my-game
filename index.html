@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网游工作室模拟器 · 终极版 (崩溃+彩蛋)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+        }
+        body {
+            background: #0a0f1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 8px;
+        }
+        .game-container {
+            max-width: 1100px;
+            width: 100%;
+            background: #142b3b;
+            border-radius: 24px;
+            padding: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            border: 1px solid #2f5775;
+        }
+        h1 {
+            text-align: center;
+            margin: 0 0 4px 0;
+            font-weight: 400;
+            font-size: 1.8rem;
+            color: #b9e6ff;
+            text-shadow: 0 2px 0 #0b4b6b;
+        }
+        .sub {
+            text-align: center;
+            color: #88b8da;
+            margin-bottom: 8px;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+        /* 游戏配置区域 */
+        .config-panel {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #0e202d;
+            border-radius: 30px;
+            padding: 8px 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .config-panel input {
+            background: #1d4a62;
+            border: 1px solid #6da5c9;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            width: 140px;
+        }
+        .config-panel select {
+            background: #1d4a62;
+            border: 1px solid #6da5c9;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+        }
+        .start-btn {
+            background: #5fa84a;
+            border: none;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #2b5e1e;
+            font-size: 0.9rem;
+        }
+        .start-btn:active { transform: translateY(4px); box-shadow: none; }
+        .config-panel label {
+            color: #c3e2ff;
+            font-size: 0.9rem;
+        }
+        /* 仪表盘 - 3x3 网格 */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background: #0e202d;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .metric-card {
+            background: #153e55;
+            border-radius: 12px;
+            padding: 8px 8px;
+            border-left: 3px solid #4fa6d8;
+        }
+        .metric-title {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+            color: #ddf0ff;
+            margin-bottom: 4px;
+            font-size: 0.8rem;
+        }
+        .bar-bg {
+            width: 100%;
+            height: 10px;
+            background: #1b3f52;
+            border-radius: 20px;
+            overflow: hidden;
+            margin: 2px 0;
+        }
+        .bar-fill {
+            height: 100%;
+            width: 70%;
+            background: linear-gradient(90deg, #57c0ff, #2f93cc);
+            border-radius: 20px;
+            transition: width 0.2s;
+        }
+        .fill-stability { background: linear-gradient(90deg, #3bc0b0, #1f9e8d); }
+        .fill-satisfaction { background: linear-gradient(90deg, #f9b84a, #ea8e2a); }
+        .fill-energy { background: linear-gradient(90deg, #c75bff, #9f3ed8); }
+        .fill-money { background: linear-gradient(90deg, #f5d742, #d4a11e); }
+        .fill-disk { background: linear-gradient(90deg, #bf7af5, #9d4edd); }
+        .metric-value {
+            font-weight: 700;
+            color: white;
+            float: right;
+            font-size: 0.9rem;
+        }
+        /* 可折叠面板 */
+        .expansion-panel {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .engineer-panel, .tech-panel {
+            flex: 1;
+            background: #103445;
+            border-radius: 16px;
+            padding: 8px;
+            border: 1px solid #3c6f91;
+        }
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .panel-title {
+            font-size: 1.1rem;
+            color: #ffde9e;
+        }
+        .collapse-btn {
+            background: #2c5f7a;
+            border: none;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 2px 0 #123b51;
+        }
+        .collapse-btn:active { transform: translateY(2px); box-shadow: none; }
+        .engineer-content, .tech-content {
+            transition: all 0.2s;
+        }
+        .hidden-content {
+            display: none;
+        }
+        .engineer-list, .tech-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .engineer-item, .tech-item {
+            background: #1d4b63;
+            border-radius: 12px;
+            padding: 6px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            border-left: 3px solid #ffb347;
+        }
+        .engineer-info, .tech-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .engineer-name, .tech-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        .engineer-desc, .tech-desc {
+            font-size: 0.65rem;
+            color: #b3dfff;
+        }
+        .engineer-btn, .tech-btn {
+            background: #f0b345;
+            border: none;
+            color: #1d2c3a;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #8f6423;
+            font-size: 0.8rem;
+        }
+        .engineer-btn:active, .tech-btn:active { transform: translateY(3px); box-shadow: none; }
+        .engineer-btn:disabled, .tech-btn:disabled { opacity: 0.4; }
+        .tech-item { border-left-color: #4bd8b0; }
+        .tech-btn { background: #4bc0a0; box-shadow: 0 3px 0 #1f735b; }
+
+        /* 事件区域 */
+        .event-area {
+            background: #0b1b27;
+            border-radius: 14px;
+            padding: 10px;
+            margin-bottom: 12px;
+        }
+        .event-log {
+            min-height: 70px;
+            max-height: 120px;
+            overflow-y: auto;
+            color: #d0eaff;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+        .log-entry {
+            padding: 2px 0;
+            border-bottom: 1px solid #1f4a63;
+        }
+        .log-time {
+            color: #ffcd7e;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+        .event-options {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            min-height: 40px;
+        }
+        .event-option-btn {
+            background: #2b6482;
+            border: 1px solid #9ad0ff;
+            color: white;
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #123b51;
+            flex: 1 1 160px;
+        }
+        .event-option-btn:active { transform: translateY(3px); box-shadow: none; }
+
+        /* 行动点+下一周 */
+        .week-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .next-week-btn {
+            flex: 3;
+            background: #5fa84a;
+            border: none;
+            color: white;
+            padding: 12px 0;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #2b5e1e;
+        }
+        .next-week-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #2b5e1e; }
+        .next-week-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .ap-display {
+            flex: 1;
+            background: #1f4b62;
+            border-radius: 30px;
+            padding: 8px 12px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border: 1px solid #6db0d0;
+        }
+
+        /* 日常操作网格 - 4列 */
+        .action-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            background: #12384d;
+            padding: 12px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+        }
+        .action-btn {
+            background: #235e7c;
+            border: none;
+            color: white;
+            padding: 8px 4px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #0d3143;
+            border: 1px solid #7bb9db;
+            white-space: nowrap;
+        }
+        .action-btn:active { transform: translateY(4px); box-shadow: none; }
+        .action-btn:disabled { opacity: 0.4; }
+        .emergency-btn { background: #b13e4b; border-color: #ffb5b5; }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #91b9d6;
+            font-size: 0.8rem;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .reset-btn {
+            background: transparent;
+            border: 1px solid #5787a8;
+            color: #d4ecff;
+            padding: 4px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .reset-btn:hover { background: #1e4a69; }
+        .achievement {
+            background: #2f4d66;
+            padding: 4px 12px;
+            border-radius: 30px;
+            color: #f9e571;
+            font-size: 0.8rem;
+        }
+        .game-name {
+            color: #ffd966;
+            font-weight: 600;
+        }
+        .studio-name {
+            color: #a5d8ff;
+            font-weight: 600;
+        }
+        .crash-warning {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1>🚀 网游工作室模拟器</h1>
+    <div class="sub">7种类型 · 7名工程师 · 12项科技 · 7个更新方向 · 崩溃机制+彩蛋</div>
+
+    <!-- 游戏配置区域 -->
+    <div class="config-panel">
+        <label>🏢 工作室名:</label>
+        <input type="text" id="studioNameInput" value="艾泽拉斯" maxlength="20">
+        <label>🎮 游戏名:</label>
+        <input type="text" id="gameTitleInput" value="魔兽世界" maxlength="20">
+        <label>🎯 主营类型:</label>
+        <select id="gameTypeSelect">
+            <option value="tower">塔防 - 稳定优先，满意度增长慢</option>
+            <option value="moba">MOBA - 玩家多，资金快，硬盘压力大</option>
+            <option value="rpg">RPG - 满意度高，精力消耗大</option>
+            <option value="fps">FPS - 高负载高资金，硬盘消耗中等</option>
+            <option value="slg">SLG - 长周期低衰减，资金慢</option>
+            <option value="mmo">MMORPG - 玩家黏性高，稳定发展</option>
+            <option value="card">卡牌游戏 - 轻量级，满意变化快</option>
+        </select>
+        <button class="start-btn" id="startNewGameBtn">🚀 开始运营</button>
+    </div>
+
+    <!-- 仪表盘 (3x3) -->
+    <div class="dashboard">
+        <div class="metric-card"><div class="metric-title">🖥️ 稳定 <span class="metric-value" id="stabilityValue">70</span></div><div class="bar-bg"><div class="bar-fill fill-stability" id="stabilityBar" style="width:70%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">😊 满意 <span class="metric-value" id="satisfactionValue">70</span></div><div class="bar-bg"><div class="bar-fill fill-satisfaction" id="satisfactionBar" style="width:70%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">🔋 精力 <span class="metric-value" id="energyValue">80</span></div><div class="bar-bg"><div class="bar-fill fill-energy" id="energyBar" style="width:80%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">💰 资金 <span class="metric-value" id="moneyValue">1200</span></div><div class="bar-bg"><div class="bar-fill fill-money" id="moneyBar" style="width:60%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">👥 在线 <span class="metric-value" id="playersValue">1200</span></div><div class="bar-bg"><div class="bar-fill fill-stability" id="playersBar" style="width:60%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">📊 负载 <span class="metric-value" id="loadValue">45%</span></div><div class="bar-bg"><div class="bar-fill fill-energy" id="loadBar" style="width:45%"></div></div></div>
+        <!-- 硬盘卡片 -->
+        <div class="metric-card"><div class="metric-title">💾 硬盘 <span class="metric-value" id="diskValue">500/1000</span></div><div class="bar-bg"><div class="bar-fill fill-disk" id="diskBar" style="width:50%"></div></div></div>
+        <!-- 版本号卡片 -->
+        <div class="metric-card"><div class="metric-title">📦 版本 <span class="metric-value" id="versionValue">基础版本</span></div><div class="bar-bg" style="height:10px; background:#1b3f52;"><div class="bar-fill" id="versionBar" style="width:0%"></div></div></div>
+        <!-- 状态卡片 (显示崩溃倒计时) -->
+        <div class="metric-card"><div class="metric-title">⚠️ 状态 <span class="metric-value" id="statusValue">正常</span></div><div class="bar-bg" style="background:#1b3f52;"></div></div>
+    </div>
+
+    <!-- 可折叠工程师 + 科技树 -->
+    <div class="expansion-panel">
+        <div class="engineer-panel">
+            <div class="panel-header">
+                <span class="panel-title">👥 工程师</span>
+                <button class="collapse-btn" id="collapseEngineerBtn">▼</button>
+            </div>
+            <div class="engineer-content" id="engineerContent">
+                <div class="engineer-list" id="engineerList"></div>
+            </div>
+        </div>
+        <div class="tech-panel">
+            <div class="panel-header">
+                <span class="panel-title">⚡ 科技</span>
+                <button class="collapse-btn" id="collapseTechBtn">▼</button>
+            </div>
+            <div class="tech-content" id="techContent">
+                <div class="tech-list" id="techList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 事件区域 -->
+    <div class="event-area">
+        <div class="event-log" id="eventLog">
+            <div class="log-entry"><span class="log-time">[第0周]</span> 工作室成立，选择主营类型开始吧！</div>
+        </div>
+        <div class="event-options" id="eventOptions"></div>
+    </div>
+
+    <!-- 行动点 + 下一周 -->
+    <div class="week-control">
+        <div class="ap-display" id="apDisplay">⚡ 3/3</div>
+        <button class="next-week-btn" id="nextWeekBtn">⏩ 下一周</button>
+    </div>
+
+    <!-- 日常操作 (4x2) -->
+    <div class="action-panel">
+        <button class="action-btn" id="restartBtn">🔄 重启服务</button>
+        <button class="action-btn" id="compensateBtn">🎁 补偿玩家</button>
+        <button class="action-btn" id="restBtn">☕ 休息</button>
+        <button class="action-btn emergency-btn" id="emergencyResetBtn">🚨 紧急重启</button>
+        <button class="action-btn" id="buyServerBtn">🖥️ 备用服务器</button>
+        <button class="action-btn" id="hostEventBtn">🎉 玩家活动</button>
+        <button class="action-btn" id="updateGameBtn">📦 发布更新</button>
+        <button class="action-btn" id="expandDiskBtn">💾 硬盘扩容</button>
+    </div>
+
+    <!-- 底部状态 -->
+    <div class="footer">
+        <span class="achievement" id="achievementDisplay">⭐ 新手工作室</span>
+        <span>📅 第 <span id="weekDisplay">0</span> 周  📅 事件 <span id="eventCounter">0</span></span>
+        <span class="studio-name" id="studioNameDisplay">艾泽拉斯</span>
+        <span class="game-name" id="gameTitleDisplay">魔兽世界</span>
+        <button class="reset-btn" id="resetGameBtn">🔄 重新开局</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ---------- 核心状态 ----------
+    let stability = 70;
+    let satisfaction = 70;
+    let energy = 80;
+    let money = 1200;
+    let onlinePlayers = 1200;
+    let serverLoad = 45;
+    let week = 0;
+    let eventCount = 0;
+    let gameActive = true;
+    let eventActive = false;
+    let currentEvent = null;
+    let actionPoints = 3;
+
+    // 硬盘系统
+    let diskTotal = 1000;
+    let diskUsed = 500;
+
+    // 更新包系统
+    let updateBuff = {
+        moneyMultiplier: 1.0,
+        satisfactionDelta: 0,
+        diskCostPerPlayer: 0.5,
+        name: "基础版本"
+    };
+
+    // 崩溃机制
+    let isCrashed = false;        // 是否处于崩溃状态
+    let crashedWeeks = 0;         // 崩溃持续周数
+    let infiniteMoney = false;    // 彩蛋：无限资金
+    let lastCrashWeek = 0;        // 上次触发彩蛋崩溃的周数
+
+    // 游戏配置
+    let studioName = "艾泽拉斯";
+    let gameTitle = "魔兽世界";
+    let gameType = "tower";
+
+    // 类型增益 (7种)
+    const typeBonus = {
+        tower: {
+            stabilityPerWeek: 2,
+            satisfactionPerWeek: -1,
+            moneyMultiplier: 0.9,
+            energyRecover: 1,
+            diskCostFactor: 1.0
+        },
+        moba: {
+            stabilityPerWeek: -2,
+            satisfactionPerWeek: 1,
+            moneyMultiplier: 1.3,
+            energyRecover: 0,
+            diskCostFactor: 1.5
+        },
+        rpg: {
+            stabilityPerWeek: -1,
+            satisfactionPerWeek: 2,
+            moneyMultiplier: 1.0,
+            energyRecover: -1,
+            diskCostFactor: 0.8
+        },
+        fps: {
+            stabilityPerWeek: -2,
+            satisfactionPerWeek: 0,
+            moneyMultiplier: 1.4,
+            energyRecover: 0,
+            diskCostFactor: 1.2
+        },
+        slg: {
+            stabilityPerWeek: 0,
+            satisfactionPerWeek: -1,
+            moneyMultiplier: 0.8,
+            energyRecover: 2,
+            diskCostFactor: 0.9
+        },
+        mmo: {
+            stabilityPerWeek: -1,
+            satisfactionPerWeek: 1,
+            moneyMultiplier: 1.1,
+            energyRecover: 1,
+            diskCostFactor: 1.1
+        },
+        card: {
+            stabilityPerWeek: -2,
+            satisfactionPerWeek: 2,
+            moneyMultiplier: 0.9,
+            energyRecover: 2,
+            diskCostFactor: 0.9
+        }
+    };
+
+    // 工程师雇佣状态 (7名)
+    let engineers = {
+        network: false,
+        dba: false,
+        expert: false,
+        security: false,
+        architect: false,
+        ai: false,
+        storage: false
+    };
+
+    // 科技升级状态 (12项)
+    let techs = {
+        serverBoost: false,
+        loadOptimize: false,
+        moneyMaster: false,
+        trainEngineers: false,
+        autoOps: false,
+        cloudBackup: false,
+        smartScheduling: false,
+        distributedStorage: false,
+        hardwareAccel: false,
+        dataCompression: false,
+        elasticScaling: false,
+        opsAutomation: false
+    };
+
+    // 成就定义 (用于评分)
+    const achievements = [
+        { threshold: 0, name: "新手工作室" },
+        { threshold: 10, name: "熟练工作室" },
+        { threshold: 25, name: "资深工作室" },
+        { threshold: 50, name: "金牌工作室" },
+        { threshold: 100, name: "传奇工作室" }
+    ];
+
+    // DOM 元素
+    const stabilityBar = document.getElementById('stabilityBar');
+    const stabilityVal = document.getElementById('stabilityValue');
+    const satisfactionBar = document.getElementById('satisfactionBar');
+    const satisfactionVal = document.getElementById('satisfactionValue');
+    const energyBar = document.getElementById('energyBar');
+    const energyVal = document.getElementById('energyValue');
+    const moneyBar = document.getElementById('moneyBar');
+    const moneyVal = document.getElementById('moneyValue');
+    const playersVal = document.getElementById('playersValue');
+    const playersBar = document.getElementById('playersBar');
+    const loadVal = document.getElementById('loadValue');
+    const loadBar = document.getElementById('loadBar');
+    const diskVal = document.getElementById('diskValue');
+    const diskBar = document.getElementById('diskBar');
+    const versionVal = document.getElementById('versionValue');
+    const statusVal = document.getElementById('statusValue');
+    const weekDisplay = document.getElementById('weekDisplay');
+    const eventCounterSpan = document.getElementById('eventCounter');
+    const achievementDisplay = document.getElementById('achievementDisplay');
+    const studioNameDisplay = document.getElementById('studioNameDisplay');
+    const gameTitleDisplay = document.getElementById('gameTitleDisplay');
+    const eventLog = document.getElementById('eventLog');
+    const eventOptions = document.getElementById('eventOptions');
+    const nextWeekBtn = document.getElementById('nextWeekBtn');
+    const apDisplay = document.getElementById('apDisplay');
+    const engineerListDiv = document.getElementById('engineerList');
+    const techListDiv = document.getElementById('techList');
+
+    const collapseEngineerBtn = document.getElementById('collapseEngineerBtn');
+    const collapseTechBtn = document.getElementById('collapseTechBtn');
+    const engineerContent = document.getElementById('engineerContent');
+    const techContent = document.getElementById('techContent');
+
+    const studioNameInput = document.getElementById('studioNameInput');
+    const gameTitleInput = document.getElementById('gameTitleInput');
+    const gameTypeSelect = document.getElementById('gameTypeSelect');
+    const startNewGameBtn = document.getElementById('startNewGameBtn');
+    const resetGameBtn = document.getElementById('resetGameBtn');
+
+    // ---------- 折叠功能 ----------
+    let engineerCollapsed = false;
+    let techCollapsed = false;
+
+    collapseEngineerBtn.addEventListener('click', () => {
+        engineerCollapsed = !engineerCollapsed;
+        engineerContent.classList.toggle('hidden-content', engineerCollapsed);
+        collapseEngineerBtn.textContent = engineerCollapsed ? '▶' : '▼';
+    });
+
+    collapseTechBtn.addEventListener('click', () => {
+        techCollapsed = !techCollapsed;
+        techContent.classList.toggle('hidden-content', techCollapsed);
+        collapseTechBtn.textContent = techCollapsed ? '▶' : '▼';
+    });
+
+    // ---------- 辅助函数 ----------
+    function logMessage(msg) {
+        if (!gameActive && !msg.includes('游戏结束') && !msg.includes('评分') && !msg.includes('崩溃')) return;
+        let timeStr = `第${week}周`;
+        let entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `<span class="log-time">[${timeStr}]</span> ${msg}`;
+        eventLog.appendChild(entry);
+        eventLog.scrollTop = eventLog.scrollHeight;
+        if (eventLog.children.length > 30) {
+            eventLog.removeChild(eventLog.children[0]);
+        }
+    }
+
+    // 评分函数 (游戏结束时调用)
+    function showFinalScore() {
+        let maxOnline = onlinePlayers;
+        let engineerCount = Object.values(engineers).filter(v => v).length;
+        let techCount = Object.values(techs).filter(v => v).length;
+        let finalWeek = week;
+        let finalEventCount = eventCount;
+        let finalMoney = infiniteMoney ? 999999 : money;
+        let finalStability = stability;
+        let finalSatisfaction = satisfaction;
+        let finalEnergy = energy;
+
+        let score = finalWeek * 5
+                  + finalEventCount * 3
+                  + engineerCount * 20
+                  + techCount * 15
+                  + Math.floor(finalMoney / 100) * 2
+                  + finalStability * 1
+                  + finalSatisfaction * 1
+                  + finalEnergy * 1;
+
+        let grade = '';
+        if (score >= 800) grade = 'S';
+        else if (score >= 600) grade = 'A';
+        else if (score >= 400) grade = 'B';
+        else if (score >= 200) grade = 'C';
+        else grade = 'D';
+
+        logMessage('══════════════════════════════');
+        logMessage('🏁 游戏结束 · 最终评分');
+        logMessage(`工作室: ${studioName}  |  游戏: ${gameTitle}`);
+        logMessage(`存活周数: ${finalWeek}  |  处理事件: ${finalEventCount}`);
+        logMessage(`工程师: ${engineerCount}/7  |  科技: ${techCount}/12`);
+        logMessage(`最终资金: ${infiniteMoney ? 'max' : finalMoney}  |  最高在线: ${maxOnline}`);
+        logMessage(`稳定: ${finalStability}  |  满意: ${finalSatisfaction}  |  精力: ${finalEnergy}`);
+        logMessage(`综合得分: ${score}  |  评级: ${grade}`);
+        logMessage('══════════════════════════════');
+    }
+
+    function refreshUI() {
+        stability = Math.min(100, Math.max(0, stability));
+        satisfaction = Math.min(100, Math.max(0, satisfaction));
+        energy = Math.min(100, Math.max(0, energy));
+        if (money < 0) money = 0;
+
+        stabilityBar.style.width = stability + '%';
+        stabilityVal.innerText = stability;
+        satisfactionBar.style.width = satisfaction + '%';
+        satisfactionVal.innerText = satisfaction;
+        energyBar.style.width = energy + '%';
+        energyVal.innerText = energy;
+
+        // 资金显示（彩蛋显示max）
+        if (infiniteMoney) {
+            moneyVal.innerText = 'max';
+            moneyBar.style.width = '100%';
+        } else {
+            let moneyPercent = Math.min(100, Math.floor(money / 2500 * 100));
+            moneyBar.style.width = moneyPercent + '%';
+            moneyVal.innerText = money;
+        }
+
+        onlinePlayers = Math.floor(200 + (satisfaction / 100) * 1800);
+        playersVal.innerText = onlinePlayers;
+        let playerPercent = Math.min(100, Math.floor(onlinePlayers / 2000 * 100));
+        playersBar.style.width = playerPercent + '%';
+
+        // 硬盘占用
+        let diskCostFactor = typeBonus[gameType]?.diskCostFactor || 1.0;
+        if (engineers.storage) diskCostFactor *= 0.9;
+        if (techs.distributedStorage) diskCostFactor *= 0.95;
+        if (techs.dataCompression) diskCostFactor *= 0.9;
+
+        diskUsed = Math.min(diskTotal, Math.floor(onlinePlayers * updateBuff.diskCostPerPlayer * diskCostFactor));
+        let diskPercent = Math.floor(diskUsed / diskTotal * 100);
+        diskBar.style.width = diskPercent + '%';
+        diskVal.innerText = diskUsed + '/' + diskTotal;
+
+        // 负载计算
+        let loadBase = 40;
+        let unstabilityFactor = (100 - stability) * 0.3;
+        let playerFactor = (onlinePlayers / 2000) * 30;
+        let diskFactor = (diskUsed / diskTotal) * 20;
+        serverLoad = Math.min(100, Math.floor(loadBase + unstabilityFactor + playerFactor + diskFactor));
+
+        if (techs.loadOptimize) serverLoad = Math.floor(serverLoad * 0.8);
+        if (techs.smartScheduling) serverLoad = Math.floor(serverLoad * 0.85);
+        if (techs.hardwareAccel) serverLoad = Math.floor(serverLoad * 0.95);
+        if (engineers.architect) serverLoad = Math.floor(serverLoad * 0.9);
+        if (techs.distributedStorage) serverLoad = Math.floor(serverLoad * 0.95);
+
+        loadVal.innerText = serverLoad + '%';
+        loadBar.style.width = serverLoad + '%';
+
+        versionVal.innerText = updateBuff.name;
+        // 状态显示：崩溃倒计时
+        if (isCrashed) {
+            statusVal.innerText = `崩溃中 (${crashedWeeks+1}/4)`;
+            statusVal.classList.add('crash-warning');
+        } else {
+            statusVal.innerText = diskUsed > diskTotal * 0.9 ? '⚠️ 硬盘告急' : '正常';
+            statusVal.classList.remove('crash-warning');
+        }
+
+        weekDisplay.innerText = week;
+        apDisplay.innerText = `⚡ ${actionPoints}/3`;
+
+        let currentAch = achievements[0].name;
+        for (let i = achievements.length-1; i >= 0; i--) {
+            if (week >= achievements[i].threshold) {
+                currentAch = achievements[i].name;
+                break;
+            }
+        }
+        achievementDisplay.innerText = '⭐ ' + currentAch;
+        eventCounterSpan.innerText = eventCount;
+        studioNameDisplay.innerText = studioName;
+        gameTitleDisplay.innerText = gameTitle;
+
+        const actionBtns = document.querySelectorAll('.action-btn');
+        actionBtns.forEach(btn => {
+            btn.disabled = !gameActive || eventActive || actionPoints <= 0;
+        });
+    }
+
+    function checkGameOver() {
+        if (!gameActive) return;
+        let reason = null;
+        // 稳定归零不立即结束，由崩溃机制处理
+        if (satisfaction <= 0) reason = '玩家弃游…… 工作室倒闭';
+        else if (energy <= 0) reason = '工程师累垮…… 工作室倒闭';
+        else if (money < 0 && !infiniteMoney) reason = '资金断裂…… 工作室破产';
+
+        if (reason) {
+            gameActive = false;
+            logMessage(`💔 ${reason}`);
+            showFinalScore();
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            resetGameBtn.disabled = false;
+            startNewGameBtn.disabled = false;
+            eventOptions.innerHTML = '';
+            nextWeekBtn.disabled = true;
+        }
+    }
+
+    function performAction(cost, actionFunc, logText) {
+        if (!gameActive) return false;
+        if (actionPoints < cost) {
+            logMessage('⚠️ 行动点不足，无法执行');
+            return false;
+        }
+        actionPoints -= cost;
+        actionFunc();
+        logMessage(logText);
+        refreshUI();
+        return true;
+    }
+
+    // 通用修改数值（事件和操作，包含工程师加成）
+    function changeStats(dStab, dSatis, dEnergy, dMoney, fromEvent = false) {
+        if (!gameActive) return;
+
+        let effStab = dStab;
+        let effSatis = dSatis;
+        let effEnergy = dEnergy;
+        let effMoney = dMoney;
+
+        // 安全工程师：事件负面效果降低20%
+        if (fromEvent && engineers.security) {
+            if (effStab < 0) effStab = Math.ceil(effStab * 0.8);
+            if (effSatis < 0) effSatis = Math.ceil(effSatis * 0.8);
+            if (effEnergy < 0) effEnergy = Math.ceil(effEnergy * 0.8);
+            if (effMoney < 0) effMoney = Math.ceil(effMoney * 0.8);
+        }
+
+        if (engineers.expert) {
+            let boost = techs.trainEngineers ? 1.25 : 1.0;
+            effStab = Math.round(effStab * (1 + 0.1 * boost));
+            effSatis = Math.round(effSatis * (1 + 0.1 * boost));
+            effEnergy = Math.round(effEnergy * (1 + 0.1 * boost));
+            effMoney = Math.round(effMoney * (1 + 0.1 * boost));
+        }
+
+        // 彩蛋：无限资金时阻止资金减少
+        if (infiniteMoney && effMoney < 0) {
+            effMoney = 0;
+        }
+
+        stability += effStab;
+        satisfaction += effSatis;
+        energy += effEnergy;
+        money += effMoney;
+
+        refreshUI();
+        checkGameOver();
+    }
+
+    // ---------- 随机事件系统 ----------
+    const eventPool = [
+        { name: '数据库连接池耗尽', desc: '大量连接超时，玩家开始卡顿。', type: 'database',
+          options: [
+            { text: '重启数据库', effect: () => changeStats(-10, -5, -5, 0, true), desc: '稳定-10,满意-5,精力-5' },
+            { text: '紧急扩容', effect: () => changeStats(-5, 5, -15, -200, true), desc: '稳定-5,满意+5,精力-15,资金-200' }
+          ] },
+        { name: 'DDoS 攻击', desc: '流量异常飙升，可能是攻击！', type: 'network',
+          options: [
+            { text: '启用流量清洗', effect: () => changeStats(-5, 0, -10, 0, true), desc: '稳定-5,精力-10' },
+            { text: '请求云商清洗', effect: () => changeStats(5, 0, -5, -300, true), desc: '稳定+5,精力-5,资金-300' }
+          ] },
+        { name: '玩家论坛爆炸', desc: '玩家因为延迟高在论坛刷屏抱怨。', type: 'social',
+          options: [
+            { text: '发帖安抚', effect: () => changeStats(0, 5, -5, 0, true), desc: '满意+5,精力-5' },
+            { text: '紧急优化网络', effect: () => changeStats(-10, 10, -10, 0, true), desc: '稳定-10,满意+10,精力-10' }
+          ] },
+        { name: '内存泄漏预警', desc: '某个服务内存占用持续攀升！', type: 'database',
+          options: [
+            { text: '临时重启服务', effect: () => changeStats(-5, 0, -5, 0, true), desc: '稳定-5,精力-5' },
+            { text: '在线dump分析', effect: () => changeStats(5, 0, -15, 0, true), desc: '稳定+5,精力-15' }
+          ] },
+        { name: '新版本更新', desc: '版本更新包已就绪，但可能有风险。', type: 'general',
+          options: [
+            { text: '立即更新', effect: () => changeStats(-15, 10, -10, 0, true), desc: '稳定-15,满意+10,精力-10' },
+            { text: '推迟更新', effect: () => changeStats(0, -5, 0, 0, true), desc: '满意-5' }
+          ] },
+        { name: '运营商线路故障', desc: '部分区域玩家无法连接。', type: 'network',
+          options: [
+            { text: '启用备用线路', effect: () => changeStats(5, 5, -5, -250, true), desc: '稳定+5,满意+5,精力-5,资金-250' },
+            { text: '等待恢复', effect: () => changeStats(-5, -10, 0, 0, true), desc: '稳定-5,满意-10' }
+          ] },
+        { name: '内部员工误操作', desc: '有人把配置文件改错了！', type: 'general',
+          options: [
+            { text: '快速回滚', effect: () => changeStats(-5, -5, -10, 0, true), desc: '稳定-5,满意-5,精力-10' },
+            { text: '紧急修复', effect: () => changeStats(5, 0, -20, -100, true), desc: '稳定+5,精力-20,资金-100' }
+          ] },
+        { name: '新游戏活动火爆', desc: '在线人数暴增，服务器压力大。', type: 'general',
+          options: [
+            { text: '加节点扩容', effect: () => changeStats(10, 5, -10, -300, true), desc: '稳定+10,满意+5,精力-10,资金-300' },
+            { text: '排队限流', effect: () => changeStats(5, -10, -5, 0, true), desc: '稳定+5,满意-10,精力-5' }
+          ] },
+        { name: '挖矿病毒爆发', desc: '服务器CPU被恶意占用。', type: 'network',
+          options: [
+            { text: '杀毒+修补', effect: () => changeStats(5, 0, -15, 0, true), desc: '稳定+5,精力-15' },
+            { text: '重装系统', effect: () => changeStats(-15, -5, -10, -200, true), desc: '稳定-15,满意-5,精力-10,资金-200' }
+          ] }
+    ];
+
+    function showEventOptions(event) {
+        eventOptions.innerHTML = '';
+        let opt1 = document.createElement('button');
+        opt1.className = 'event-option-btn';
+        opt1.innerText = event.options[0].text + ' (' + event.options[0].desc + ')';
+        opt1.onclick = () => {
+            if (!gameActive || !eventActive) return;
+            logMessage(`✔ 选择了: ${event.options[0].text}`);
+            applyEngineerBonus(event, 0);
+            event.options[0].effect();
+            eventActive = false;
+            currentEvent = null;
+            eventOptions.innerHTML = '';
+            nextWeekBtn.disabled = false;
+            refreshUI();
+        };
+
+        let opt2 = document.createElement('button');
+        opt2.className = 'event-option-btn';
+        opt2.innerText = event.options[1].text + ' (' + event.options[1].desc + ')';
+        opt2.onclick = () => {
+            if (!gameActive || !eventActive) return;
+            logMessage(`✔ 选择了: ${event.options[1].text}`);
+            applyEngineerBonus(event, 1);
+            event.options[1].effect();
+            eventActive = false;
+            currentEvent = null;
+            eventOptions.innerHTML = '';
+            nextWeekBtn.disabled = false;
+            refreshUI();
+        };
+
+        eventOptions.appendChild(opt1);
+        eventOptions.appendChild(opt2);
+    }
+
+    function applyEngineerBonus(event, optIndex) {
+        if (!gameActive) return;
+        if (engineers.network && event.type === 'network') {
+            changeStats(2, 0, -1, 10, false);
+            logMessage('📡 网络工程师发挥专长：效果提升');
+        }
+        if (engineers.dba && event.type === 'database') {
+            changeStats(3, 2, -2, 5, false);
+            logMessage('🗄️ 数据库管理员优化了处理');
+        }
+    }
+
+    function tryTriggerEvent() {
+        if (!gameActive) return;
+        if (eventActive) return;
+        if (Math.random() < 0.2) {
+            eventCount++;
+            let evt = eventPool[Math.floor(Math.random() * eventPool.length)];
+            logMessage(`🔥 突发事件：${evt.name} —— ${evt.desc}`);
+            eventActive = true;
+            currentEvent = evt;
+            showEventOptions(evt);
+            nextWeekBtn.disabled = true;
+            refreshUI();
+        }
+    }
+
+    // ---------- 核心：推进一周 ----------
+    function advanceWeek() {
+        if (!gameActive) return;
+        if (eventActive) {
+            logMessage('⚠️ 请先处理当前事件');
+            return;
+        }
+
+        week++;
+
+        // 彩蛋：每7周触发一次崩溃
+        if (infiniteMoney && week % 7 === 0 && week !== lastCrashWeek) {
+            stability = 0;
+            lastCrashWeek = week;
+            logMessage('🍔 美食大战老鼠的诅咒！服务器因美食过量而崩溃！');
+        }
+
+        // 基础衰减
+        let loadFactor = Math.floor(serverLoad / 25);
+        let diskOverload = diskUsed > diskTotal * 0.9 ? 2 : 0;
+        let dStab = -2 - loadFactor * 2 - diskOverload;
+        let dSatis = (stability < 40) ? -3 : -2;
+        let dEnergy = (energy < 30) ? 3 : 4;
+        let dMoney = Math.floor(onlinePlayers / 120 * updateBuff.moneyMultiplier);
+
+        // 类型加成
+        let bonus = typeBonus[gameType];
+        if (bonus) {
+            dStab += bonus.stabilityPerWeek || 0;
+            dSatis += bonus.satisfactionPerWeek || 0;
+            dEnergy += bonus.energyRecover || 0;
+            dMoney = Math.floor(dMoney * (bonus.moneyMultiplier || 1.0));
+        }
+
+        // 工程师/科技加成
+        if (techs.moneyMaster) dMoney = Math.floor(dMoney * 1.5);
+        if (engineers.expert) dEnergy += 2;
+        if (techs.autoOps) dEnergy += 2;
+        if (engineers.architect) dStab += 1;
+        if (engineers.ai) {
+            dStab += 2;
+            dMoney -= 50;
+        }
+        if (techs.cloudBackup) dMoney = Math.floor(dMoney * 0.9);
+        if (techs.hardwareAccel) dStab += 1;
+        if (techs.opsAutomation) {
+            dEnergy += 1;
+            dMoney = Math.floor(dMoney * 1.1);
+        }
+        if (techs.elasticScaling && serverLoad > 70) {
+            dStab += 3;
+            dMoney -= 50;
+        }
+
+        satisfaction += updateBuff.satisfactionDelta;
+
+        // 应用数值（注意彩蛋会阻止资金减少）
+        let tempMoney = money + dMoney;
+        if (infiniteMoney && dMoney < 0) {
+            // 不减少
+        } else {
+            money += dMoney;
+        }
+        stability += dStab;
+        satisfaction += dSatis;
+        energy += dEnergy;
+
+        // 处理崩溃状态
+        if (stability <= 0) {
+            if (!isCrashed) {
+                isCrashed = true;
+                crashedWeeks = 1;
+                logMessage('💥 服务器进入崩溃状态！请在4周内恢复稳定！');
+            } else {
+                crashedWeeks++;
+                logMessage(`⚠️ 服务器崩溃第${crashedWeeks}周...`);
+                if (crashedWeeks >= 4) {
+                    gameActive = false;
+                    logMessage('💔 服务器连续崩溃4周，工作室倒闭！');
+                    showFinalScore();
+                    document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+                    resetGameBtn.disabled = false;
+                    startNewGameBtn.disabled = false;
+                    eventOptions.innerHTML = '';
+                    nextWeekBtn.disabled = true;
+                    refreshUI();
+                    return;
+                }
+            }
+        } else {
+            if (isCrashed) {
+                isCrashed = false;
+                crashedWeeks = 0;
+                logMessage('✅ 服务器已恢复稳定，退出崩溃状态！');
+            }
+        }
+
+        actionPoints = 3;
+
+        tryTriggerEvent();
+
+        if (week === 10) logMessage('🎉 成就解锁：熟练工作室 (10周)');
+        if (week === 25) logMessage('🎉 成就解锁：资深工作室 (25周)');
+        if (week === 50) logMessage('🎉 成就解锁：金牌工作室 (50周)');
+
+        refreshUI();
+        checkGameOver();
+    }
+
+    // ---------- 工程师和科技树渲染 ----------
+    function renderEngineers() {
+        let html = '';
+        html += `<div class="engineer-item">
+            <div class="engineer-info">
+                <span class="engineer-name">🌐 网络工程师</span>
+                <span class="engineer-desc">网络事件+资金</span>
+            </div>
+            <button class="engineer-btn" id="hireNetworkBtn" ${engineers.network ? 'disabled' : ''}>${engineers.network ? '已雇' : '雇佣300'}</button>
+        </div>`;
+        html += `<div class="engineer-item">
+            <div class="engineer-info">
+                <span class="engineer-name">🗄️ 数据库管理员</span>
+                <span class="engineer-desc">数据库事件+稳定</span>
+            </div>
+            <button class="engineer-btn" id="hireDbaBtn" ${engineers.dba ? 'disabled' : ''}>${engineers.dba ? '已雇' : '雇佣300'}</button>
+        </div>`;
+        html += `<div class="engineer-item">
+            <div class="engineer-info">
+                <span class="engineer-name">🧠 全能专家</span>
+                <span class="engineer-desc">效果+10%,精力恢复+2</span>
+            </div>
+            <button class="engineer-btn" id="hireExpertBtn" ${engineers.expert ? 'disabled' : ''}>${engineers.expert ? '已雇' : '雇佣500'}</button>
+        </div>`;
+        html += `<div class="engineer-item">
+            <div class="engineer-info">
+                <span class="engineer-name">🛡️ 安全工程师</span>
+                <span class="engineer-desc">事件负面-20%,资金+50/周</span>
+            </div>
+            <button class="engineer-btn" id="hireSecurityBtn" ${engineers.security ? 'disabled' : ''}>${engineers.security ? '已雇' : '雇佣400'}</button>
+        </div>`;
+        html += `<div class="engineer-item">
+            <div class="engineer-info">
+                <span class="engineer-name">🏗️ 架构师</span>
+                <span class="engineer-desc">稳定+1/周,负载-10%</span>
+            </div>
+            <button class="engineer-btn" id="hireArchitectBtn" ${engineers.architect ? 'disabled' : ''}>${engineers.architect ? '已雇' : '雇佣500'}</button>
+        </div>`;
+        html += `<div class="engineer-item">
+            <div class="engineer-info">
+                <span class="engineer-name">🤖 AI工程师</span>
+                <span class="engineer-desc">稳定+2/周,资金-50/周</span>
+            </div>
+            <button class="engineer-btn" id="hireAiBtn" ${engineers.ai ? 'disabled' : ''}>${engineers.ai ? '已雇' : '雇佣600'}</button>
+        </div>`;
+        html += `<div class="engineer-item">
+            <div class="engineer-info">
+                <span class="engineer-name">💾 存储工程师</span>
+                <span class="engineer-desc">硬盘占用-10%</span>
+            </div>
+            <button class="engineer-btn" id="hireStorageBtn" ${engineers.storage ? 'disabled' : ''}>${engineers.storage ? '已雇' : '雇佣400'}</button>
+        </div>`;
+        engineerListDiv.innerHTML = html;
+
+        document.getElementById('hireNetworkBtn')?.addEventListener('click', () => hireEngineer('network', 300));
+        document.getElementById('hireDbaBtn')?.addEventListener('click', () => hireEngineer('dba', 300));
+        document.getElementById('hireExpertBtn')?.addEventListener('click', () => hireEngineer('expert', 500));
+        document.getElementById('hireSecurityBtn')?.addEventListener('click', () => hireEngineer('security', 400));
+        document.getElementById('hireArchitectBtn')?.addEventListener('click', () => hireEngineer('architect', 500));
+        document.getElementById('hireAiBtn')?.addEventListener('click', () => hireEngineer('ai', 600));
+        document.getElementById('hireStorageBtn')?.addEventListener('click', () => hireEngineer('storage', 400));
+    }
+
+    function hireEngineer(type, cost) {
+        if (!gameActive) return;
+        if ((infiniteMoney || money >= cost) && !engineers[type]) {
+            if (!infiniteMoney) money -= cost;
+            engineers[type] = true;
+            logMessage(`雇佣了${type==='network'?'网络工程师':type==='dba'?'数据库管理员':type==='expert'?'全能专家':type==='security'?'安全工程师':type==='architect'?'架构师':type==='ai'?'AI工程师':'存储工程师'}，花费${cost}`);
+            renderEngineers();
+            refreshUI();
+        } else {
+            logMessage('资金不足或已雇佣');
+        }
+    }
+
+    function renderTechs() {
+        let html = '';
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">🔧 服务器强化</span>
+                <span class="tech-desc">衰减减少</span>
+            </div>
+            <button class="tech-btn" id="techServerBtn" ${techs.serverBoost ? 'disabled' : ''}>${techs.serverBoost ? '已购' : '购买500'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">📉 负载优化</span>
+                <span class="tech-desc">负载-20%</span>
+            </div>
+            <button class="tech-btn" id="techLoadBtn" ${techs.loadOptimize ? 'disabled' : ''}>${techs.loadOptimize ? '已购' : '购买400'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">💰 资金管理</span>
+                <span class="tech-desc">资金收益+50%</span>
+            </div>
+            <button class="tech-btn" id="techMoneyBtn" ${techs.moneyMaster ? 'disabled' : ''}>${techs.moneyMaster ? '已购' : '购买600'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">📚 工程师培训</span>
+                <span class="tech-desc">工程师效果+25%</span>
+            </div>
+            <button class="tech-btn" id="techTrainBtn" ${techs.trainEngineers ? 'disabled' : ''}>${techs.trainEngineers ? '已购' : '购买800'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">🤖 自动运维</span>
+                <span class="tech-desc">每周+2精力</span>
+            </div>
+            <button class="tech-btn" id="techAutoOpsBtn" ${techs.autoOps ? 'disabled' : ''}>${techs.autoOps ? '已购' : '购买700'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">☁️ 云备份</span>
+                <span class="tech-desc">硬盘+50%,资金收益-10%</span>
+            </div>
+            <button class="tech-btn" id="techCloudBtn" ${techs.cloudBackup ? 'disabled' : ''}>${techs.cloudBackup ? '已购' : '购买800'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">⚡ 智能调度</span>
+                <span class="tech-desc">负载-15%</span>
+            </div>
+            <button class="tech-btn" id="techSmartBtn" ${techs.smartScheduling ? 'disabled' : ''}>${techs.smartScheduling ? '已购' : '购买600'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">🌐 分布式存储</span>
+                <span class="tech-desc">硬盘+30%,负载-5%</span>
+            </div>
+            <button class="tech-btn" id="techDistBtn" ${techs.distributedStorage ? 'disabled' : ''}>${techs.distributedStorage ? '已购' : '购买900'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">⚙️ 硬件加速</span>
+                <span class="tech-desc">稳定+1/周,负载-5%</span>
+            </div>
+            <button class="tech-btn" id="techHardwareBtn" ${techs.hardwareAccel ? 'disabled' : ''}>${techs.hardwareAccel ? '已购' : '购买700'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">🗜️ 数据压缩</span>
+                <span class="tech-desc">硬盘占用-10%</span>
+            </div>
+            <button class="tech-btn" id="techCompressBtn" ${techs.dataCompression ? 'disabled' : ''}>${techs.dataCompression ? '已购' : '购买600'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">📈 弹性伸缩</span>
+                <span class="tech-desc">负载>70%时,稳定+3,资金-50/周</span>
+            </div>
+            <button class="tech-btn" id="techElasticBtn" ${techs.elasticScaling ? 'disabled' : ''}>${techs.elasticScaling ? '已购' : '购买800'}</button>
+        </div>`;
+        html += `<div class="tech-item">
+            <div class="tech-info">
+                <span class="tech-name">🤖 运维自动化</span>
+                <span class="tech-desc">精力+1/周,资金收益+10%</span>
+            </div>
+            <button class="tech-btn" id="techOpsAutoBtn" ${techs.opsAutomation ? 'disabled' : ''}>${techs.opsAutomation ? '已购' : '购买750'}</button>
+        </div>`;
+        techListDiv.innerHTML = html;
+
+        document.getElementById('techServerBtn')?.addEventListener('click', () => buyTech('serverBoost', 500));
+        document.getElementById('techLoadBtn')?.addEventListener('click', () => buyTech('loadOptimize', 400));
+        document.getElementById('techMoneyBtn')?.addEventListener('click', () => buyTech('moneyMaster', 600));
+        document.getElementById('techTrainBtn')?.addEventListener('click', () => buyTech('trainEngineers', 800));
+        document.getElementById('techAutoOpsBtn')?.addEventListener('click', () => buyTech('autoOps', 700));
+        document.getElementById('techCloudBtn')?.addEventListener('click', () => buyTech('cloudBackup', 800));
+        document.getElementById('techSmartBtn')?.addEventListener('click', () => buyTech('smartScheduling', 600));
+        document.getElementById('techDistBtn')?.addEventListener('click', () => buyTech('distributedStorage', 900));
+        document.getElementById('techHardwareBtn')?.addEventListener('click', () => buyTech('hardwareAccel', 700));
+        document.getElementById('techCompressBtn')?.addEventListener('click', () => buyTech('dataCompression', 600));
+        document.getElementById('techElasticBtn')?.addEventListener('click', () => buyTech('elasticScaling', 800));
+        document.getElementById('techOpsAutoBtn')?.addEventListener('click', () => buyTech('opsAutomation', 750));
+    }
+
+    function buyTech(tech, cost) {
+        if (!gameActive) return;
+        if ((infiniteMoney || money >= cost) && !techs[tech]) {
+            if (!infiniteMoney) money -= cost;
+            techs[tech] = true;
+            if (tech === 'cloudBackup') {
+                diskTotal = Math.floor(diskTotal * 1.5);
+            }
+            if (tech === 'distributedStorage') {
+                diskTotal = Math.floor(diskTotal * 1.3);
+            }
+            logMessage(`科技升级：${tech} 完成，花费${cost}`);
+            renderTechs();
+            refreshUI();
+        } else {
+            logMessage('资金不足或已升级');
+        }
+    }
+
+    // ---------- 发布更新 (7个方向) ----------
+    function showUpdateOptions() {
+        if (!gameActive) return;
+        if (eventActive && currentEvent) {
+            logMessage('⚠️ 请先处理当前事件');
+            return;
+        }
+        if (eventActive && !currentEvent) {
+            logMessage('⚠️ 请先完成当前更新选择');
+            return;
+        }
+
+        eventOptions.innerHTML = '';
+
+        let opt1 = document.createElement('button');
+        opt1.className = 'event-option-btn';
+        opt1.innerText = '💰 氪金方向 (资金+200,满意-5,后续资金x1.2)';
+        opt1.onclick = () => {
+            let wasEventActive = eventActive;
+            eventActive = false;
+            let success = performAction(1, () => {
+                changeStats(0, -5, -5, 200, false);
+                updateBuff.moneyMultiplier = 1.2;
+                updateBuff.name = '氪金版';
+                logMessage('更新方向：氪金版，后续资金收入增加20%');
+            }, '发布更新：氪金方向');
+            eventActive = wasEventActive;
+            if (success) {
+                eventOptions.innerHTML = '';
+                eventActive = false;
+                currentEvent = null;
+                nextWeekBtn.disabled = false;
+                refreshUI();
+            }
+        };
+
+        let opt2 = document.createElement('button');
+        opt2.className = 'event-option-btn';
+        opt2.innerText = '🎨 内容方向 (满意+10,硬盘占用+50,资金-100)';
+        opt2.onclick = () => {
+            if (!infiniteMoney && money < 100) {
+                logMessage('资金不足，需要100');
+                return;
+            }
+            let wasEventActive = eventActive;
+            eventActive = false;
+            let success = performAction(1, () => {
+                changeStats(0, 10, -5, -100, false);
+                updateBuff.diskCostPerPlayer += 0.1;
+                diskTotal += 200;
+                updateBuff.name = '内容版';
+                logMessage('更新方向：内容版，玩家满意度提升但硬盘消耗增加');
+            }, '发布更新：内容方向');
+            eventActive = wasEventActive;
+            if (success) {
+                eventOptions.innerHTML = '';
+                eventActive = false;
+                currentEvent = null;
+                nextWeekBtn.disabled = false;
+                refreshUI();
+            }
+        };
+
+        let opt3 = document.createElement('button');
+        opt3.className = 'event-option-btn';
+        opt3.innerText = '⚖️ 平衡方向 (稳定+5,满意+5,精力-5)';
+        opt3.onclick = () => {
+            let wasEventActive = eventActive;
+            eventActive = false;
+            let success = performAction(1, () => {
+                changeStats(5, 5, -5, 0, false);
+                updateBuff.name = '平衡版';
+                logMessage('更新方向：平衡版，小幅提升稳定和满意');
+            }, '发布更新：平衡方向');
+            eventActive = wasEventActive;
+            if (success) {
+                eventOptions.innerHTML = '';
+                eventActive = false;
+                currentEvent = null;
+                nextWeekBtn.disabled = false;
+                refreshUI();
+            }
+        };
+
+        let opt4 = document.createElement('button');
+        opt4.className = 'event-option-btn';
+        opt4.innerText = '⚡ 性能优化 (稳定+5,负载-10%,资金-100)';
+        opt4.onclick = () => {
+            if (!infiniteMoney && money < 100) {
+                logMessage('资金不足，需要100');
+                return;
+            }
+            let wasEventActive = eventActive;
+            eventActive = false;
+            let success = performAction(1, () => {
+                changeStats(5, 0, -5, -100, false);
+                serverLoad = Math.floor(serverLoad * 0.9);
+                updateBuff.name = '性能版';
+                logMessage('更新方向：性能优化，负载降低10%');
+            }, '发布更新：性能优化');
+            eventActive = wasEventActive;
+            if (success) {
+                eventOptions.innerHTML = '';
+                eventActive = false;
+                currentEvent = null;
+                nextWeekBtn.disabled = false;
+                refreshUI();
+            }
+        };
+
+        let opt5 = document.createElement('button');
+        opt5.className = 'event-option-btn';
+        opt5.innerText = '📢 社区运营 (满意+8,资金+100,精力-8)';
+        opt5.onclick = () => {
+            let wasEventActive = eventActive;
+            eventActive = false;
+            let success = performAction(1, () => {
+                changeStats(0, 8, -8, 100, false);
+                updateBuff.name = '社区版';
+                logMessage('更新方向：社区运营，满意度提升，资金增加');
+            }, '发布更新：社区运营');
+            eventActive = wasEventActive;
+            if (success) {
+                eventOptions.innerHTML = '';
+                eventActive = false;
+                currentEvent = null;
+                nextWeekBtn.disabled = false;
+                refreshUI();
+            }
+        };
+
+        let opt6 = document.createElement('button');
+        opt6.className = 'event-option-btn';
+        opt6.innerText = '💬 社交系统 (满意+10,精力-10,后续每周满意+1)';
+        opt6.onclick = () => {
+            let wasEventActive = eventActive;
+            eventActive = false;
+            let success = performAction(1, () => {
+                changeStats(0, 10, -10, 0, false);
+                updateBuff.satisfactionDelta += 1;
+                updateBuff.name = '社交版';
+                logMessage('更新方向：社交系统，每周额外+1满意度');
+            }, '发布更新：社交系统');
+            eventActive = wasEventActive;
+            if (success) {
+                eventOptions.innerHTML = '';
+                eventActive = false;
+                currentEvent = null;
+                nextWeekBtn.disabled = false;
+                refreshUI();
+            }
+        };
+
+        let opt7 = document.createElement('button');
+        opt7.className = 'event-option-btn';
+        opt7.innerText = '⚔️ 跨服战 (资金+300,稳定-15,精力-10,后续硬盘占用+0.1)';
+        opt7.onclick = () => {
+            let wasEventActive = eventActive;
+            eventActive = false;
+            let success = performAction(1, () => {
+                changeStats(-15, 0, -10, 300, false);
+                updateBuff.diskCostPerPlayer += 0.1;
+                updateBuff.name = '跨服版';
+                logMessage('更新方向：跨服战，资金大增但稳定下降，硬盘压力增加');
+            }, '发布更新：跨服战');
+            eventActive = wasEventActive;
+            if (success) {
+                eventOptions.innerHTML = '';
+                eventActive = false;
+                currentEvent = null;
+                nextWeekBtn.disabled = false;
+                refreshUI();
+            }
+        };
+
+        let cancelBtn = document.createElement('button');
+        cancelBtn.className = 'event-option-btn';
+        cancelBtn.innerText = '❌ 取消';
+        cancelBtn.onclick = () => {
+            eventOptions.innerHTML = '';
+            eventActive = false;
+            currentEvent = null;
+            nextWeekBtn.disabled = false;
+            refreshUI();
+            logMessage('已取消发布更新');
+        };
+
+        eventOptions.appendChild(opt1);
+        eventOptions.appendChild(opt2);
+        eventOptions.appendChild(opt3);
+        eventOptions.appendChild(opt4);
+        eventOptions.appendChild(opt5);
+        eventOptions.appendChild(opt6);
+        eventOptions.appendChild(opt7);
+        eventOptions.appendChild(cancelBtn);
+
+        eventActive = true;
+        currentEvent = null;
+        nextWeekBtn.disabled = true;
+        refreshUI();
+    }
+
+    // 硬盘扩容
+    function expandDisk() {
+        if (!gameActive || eventActive) return;
+        if (actionPoints < 1) { logMessage('行动点不足'); return; }
+        if (!infiniteMoney && money < 200) { logMessage('资金不足，需要200'); return; }
+        actionPoints -= 1;
+        if (!infiniteMoney) money -= 200;
+        diskTotal += 200;
+        logMessage('硬盘扩容：总容量增加200GB');
+        refreshUI();
+    }
+
+    // ---------- 日常操作绑定 ----------
+    document.getElementById('restartBtn').addEventListener('click', () => {
+        performAction(1, () => changeStats(5, 2, -10, 0, false), '重启核心服务：稳定+5，满意+2，精力-10');
+    });
+    document.getElementById('compensateBtn').addEventListener('click', () => {
+        performAction(1, () => changeStats(0, 8, -5, -50, false), '补偿玩家：满意+8，精力-5，资金-50');
+    });
+    document.getElementById('restBtn').addEventListener('click', () => {
+        performAction(1, () => changeStats(-3, 0, 15, 0, false), '工程师休息：精力+15，稳定-3');
+    });
+    document.getElementById('emergencyResetBtn').addEventListener('click', () => {
+        performAction(1, () => changeStats(20, -10, -20, 0, false), '紧急重启集群：稳定+20，满意-10，精力-20');
+    });
+    document.getElementById('buyServerBtn').addEventListener('click', () => {
+        if (!gameActive || eventActive) return;
+        if (actionPoints < 1) { logMessage('行动点不足'); return; }
+        if (!infiniteMoney && money < 200) { logMessage('资金不足，需要200'); return; }
+        actionPoints -= 1;
+        if (!infiniteMoney) money -= 200;
+        changeStats(15, 0, -5, 0, false); // 资金已经在外部扣除，所以传0
+        logMessage('购买备用服务器：稳定+15，精力-5');
+        refreshUI();
+    });
+    document.getElementById('hostEventBtn').addEventListener('click', () => {
+        if (!gameActive || eventActive) return;
+        if (actionPoints < 1) { logMessage('行动点不足'); return; }
+        if (!infiniteMoney && money < 150) { logMessage('资金不足，需要150'); return; }
+        actionPoints -= 1;
+        if (!infiniteMoney) money -= 150;
+        changeStats(-5, 20, -10, 0, false);
+        logMessage('举办玩家活动：满意+20，稳定-5，精力-10');
+        refreshUI();
+    });
+    document.getElementById('updateGameBtn').addEventListener('click', showUpdateOptions);
+    document.getElementById('expandDiskBtn').addEventListener('click', expandDisk);
+
+    // 下一周按钮
+    nextWeekBtn.addEventListener('click', advanceWeek);
+
+    // ---------- 重置 ----------
+    function resetGameWithConfig() {
+        studioName = studioNameInput.value.trim() || "无名工作室";
+        gameTitle = gameTitleInput.value.trim() || "无名游戏";
+        gameType = gameTypeSelect.value;
+
+        // 根据类型设置初始值
+        if (gameType === 'tower') {
+            stability = 85; satisfaction = 60; energy = 75; money = 1000; diskTotal = 1200;
+        } else if (gameType === 'moba') {
+            stability = 60; satisfaction = 70; energy = 70; money = 1500; diskTotal = 800;
+        } else if (gameType === 'rpg') {
+            stability = 65; satisfaction = 85; energy = 85; money = 1100; diskTotal = 1000;
+        } else if (gameType === 'fps') {
+            stability = 60; satisfaction = 70; energy = 75; money = 1400; diskTotal = 900;
+        } else if (gameType === 'slg') {
+            stability = 80; satisfaction = 65; energy = 70; money = 900; diskTotal = 1100;
+        } else if (gameType === 'mmo') {
+            stability = 70; satisfaction = 75; energy = 70; money = 1100; diskTotal = 1100;
+        } else if (gameType === 'card') {
+            stability = 65; satisfaction = 80; energy = 85; money = 1000; diskTotal = 900;
+        }
+
+        // 彩蛋检测：游戏名为"美食大战老鼠"且类型为塔防
+        if (gameTitle === "美食大战老鼠" && gameType === "tower") {
+            infiniteMoney = true;
+            money = 999999; // 设为极大值
+            logMessage('🍔 彩蛋激活！资金无限，但每7周服务器会因美食而崩溃！');
+        } else {
+            infiniteMoney = false;
+        }
+
+        // 重置崩溃状态
+        isCrashed = false;
+        crashedWeeks = 0;
+        lastCrashWeek = 0;
+
+        week = 0;
+        eventCount = 0;
+        actionPoints = 3;
+        gameActive = true;
+        eventActive = false;
+        currentEvent = null;
+        engineers = { network: false, dba: false, expert: false, security: false, architect: false, ai: false, storage: false };
+        techs = { serverBoost: false, loadOptimize: false, moneyMaster: false, trainEngineers: false, autoOps: false, cloudBackup: false, smartScheduling: false, distributedStorage: false, hardwareAccel: false, dataCompression: false, elasticScaling: false, opsAutomation: false };
+
+        updateBuff = {
+            moneyMultiplier: 1.0,
+            satisfactionDelta: 0,
+            diskCostPerPlayer: 0.5,
+            name: "基础版本"
+        };
+
+        eventOptions.innerHTML = '';
+
+        refreshUI();
+        weekDisplay.innerText = '0';
+        eventLog.innerHTML = '';
+        logMessage(`工作室开业！主营类型：${gameTypeSelect.options[gameTypeSelect.selectedIndex].text}，工作室：${studioName}，游戏：${gameTitle}`);
+        document.querySelectorAll('button').forEach(btn => btn.disabled = false);
+        nextWeekBtn.disabled = false;
+        renderEngineers();
+        renderTechs();
+
+        engineerContent.classList.remove('hidden-content');
+        techContent.classList.remove('hidden-content');
+        collapseEngineerBtn.textContent = '▼';
+        collapseTechBtn.textContent = '▼';
+        engineerCollapsed = false;
+        techCollapsed = false;
+    }
+
+    startNewGameBtn.addEventListener('click', resetGameWithConfig);
+    resetGameBtn.addEventListener('click', resetGameWithConfig);
+
+    // 初始化
+    renderEngineers();
+    renderTechs();
+    refreshUI();
+    logMessage('欢迎！请填写工作室名和游戏名，选择主营类型并点击“开始运营”。');
+})();
+</script>
+</body>
+</html>
