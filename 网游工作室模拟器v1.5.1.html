@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网游工作室模拟器</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
+        body { background: #0a0f1a; min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; padding: 8px; }
+        .game-container { max-width: 1100px; width: 100%; background: #142b3b; border-radius: 24px; padding: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); border: 1px solid #2f5775; }
+        h1 { text-align: center; margin: 0 0 4px 0; font-weight: 400; font-size: 1.8rem; color: #b9e6ff; text-shadow: 0 2px 0 #0b4b6b; }
+        .sub { text-align: center; color: #88b8da; margin-bottom: 8px; font-style: italic; font-size: 0.9rem; }
+        .config-panel { display: flex; align-items: center; gap: 8px; background: #0e202d; border-radius: 30px; padding: 8px 16px; margin-bottom: 12px; flex-wrap: wrap; }
+        .config-panel input, .config-panel select { background: #1d4a62; border: 1px solid #6da5c9; color: white; padding: 6px 12px; border-radius: 30px; font-size: 0.9rem; width: 140px; }
+        .start-btn { background: #5fa84a; border: none; color: white; padding: 6px 20px; border-radius: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 0 #2b5e1e; }
+        .start-btn:active { transform: translateY(4px); box-shadow: none; }
+        .config-panel label { color: #c3e2ff; }
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #0e202d; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
+        .metric-card { background: #153e55; border-radius: 12px; padding: 8px; border-left: 3px solid #4fa6d8; }
+        .metric-title { display: flex; align-items: center; gap: 4px; font-weight: 600; color: #ddf0ff; margin-bottom: 4px; font-size: 0.8rem; }
+        .bar-bg { width: 100%; height: 10px; background: #1b3f52; border-radius: 20px; overflow: hidden; margin: 2px 0; }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, #57c0ff, #2f93cc); border-radius: 20px; transition: width 0.2s; }
+        .fill-stability { background: linear-gradient(90deg, #3bc0b0, #1f9e8d); }
+        .fill-satisfaction { background: linear-gradient(90deg, #f9b84a, #ea8e2a); }
+        .fill-energy { background: linear-gradient(90deg, #c75bff, #9f3ed8); }
+        .fill-money { background: linear-gradient(90deg, #f5d742, #d4a11e); }
+        .fill-disk { background: linear-gradient(90deg, #bf7af5, #9d4edd); }
+        .metric-value { font-weight: 700; color: white; float: right; font-size: 0.9rem; }
+        .expansion-panel { display: flex; gap: 8px; margin-bottom: 8px; }
+        .engineer-panel, .tech-panel { flex: 1; background: #103445; border-radius: 16px; padding: 8px; border: 1px solid #3c6f91; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .panel-title { font-size: 1.1rem; color: #ffde9e; }
+        .collapse-btn { background: #2c5f7a; border: none; color: white; width: 24px; height: 24px; border-radius: 50%; font-weight: bold; cursor: pointer; box-shadow: 0 2px 0 #123b51; }
+        .collapse-btn:active { transform: translateY(2px); box-shadow: none; }
+        .engineer-content, .tech-content { transition: all 0.2s; }
+        .hidden-content { display: none; }
+        .engineer-list, .tech-list { display: flex; flex-direction: column; gap: 6px; }
+        .engineer-item, .tech-item { background: #1d4b63; border-radius: 12px; padding: 6px 8px; display: flex; justify-content: space-between; align-items: center; color: white; border-left: 3px solid #ffb347; }
+        .engineer-info, .tech-info { display: flex; flex-direction: column; }
+        .engineer-name, .tech-name { font-weight: 700; font-size: 0.9rem; }
+        .engineer-desc, .tech-desc { font-size: 0.65rem; color: #b3dfff; }
+        .engineer-btn, .tech-btn { background: #f0b345; border: none; color: #1d2c3a; font-weight: bold; padding: 4px 12px; border-radius: 20px; cursor: pointer; box-shadow: 0 3px 0 #8f6423; font-size: 0.8rem; }
+        .engineer-btn:active, .tech-btn:active { transform: translateY(3px); box-shadow: none; }
+        .engineer-btn:disabled, .tech-btn:disabled { opacity: 0.4; }
+        .tech-item { border-left-color: #4bd8b0; }
+        .tech-btn { background: #4bc0a0; box-shadow: 0 3px 0 #1f735b; }
+        .tech-locked { opacity: 0.5; filter: grayscale(70%); }
+        .event-area { background: #0b1b27; border-radius: 14px; padding: 10px; margin-bottom: 12px; }
+        .event-log { min-height: 70px; max-height: 120px; overflow-y: auto; color: #d0eaff; font-size: 0.8rem; margin-bottom: 8px; }
+        .log-entry { padding: 2px 0; border-bottom: 1px solid #1f4a63; }
+        .log-time { color: #ffcd7e; font-weight: 600; margin-right: 6px; }
+        .event-options { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; min-height: 40px; }
+        .event-option-btn { background: #2b6482; border: 1px solid #9ad0ff; color: white; padding: 6px 15px; border-radius: 30px; font-weight: 600; font-size: 0.8rem; cursor: pointer; box-shadow: 0 3px 0 #123b51; flex: 1 1 160px; }
+        .event-option-btn:active { transform: translateY(3px); box-shadow: none; }
+        .week-control { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .next-week-btn { flex: 3; background: #5fa84a; border: none; color: white; padding: 12px 0; border-radius: 40px; font-weight: 700; font-size: 1.2rem; cursor: pointer; box-shadow: 0 5px 0 #2b5e1e; }
+        .next-week-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #2b5e1e; }
+        .next-week-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .ap-display { flex: 1; background: #1f4b62; border-radius: 30px; padding: 8px 12px; text-align: center; color: white; font-weight: bold; font-size: 1.1rem; border: 1px solid #6db0d0; }
+        .action-panel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #12384d; padding: 12px; border-radius: 20px; margin-bottom: 12px; }
+        .action-btn { background: #235e7c; border: none; color: white; padding: 8px 4px; border-radius: 30px; font-weight: 600; font-size: 0.7rem; cursor: pointer; box-shadow: 0 4px 0 #0d3143; border: 1px solid #7bb9db; white-space: nowrap; }
+        .action-btn:active { transform: translateY(4px); box-shadow: none; }
+        .action-btn:disabled { opacity: 0.4; }
+        .emergency-btn { background: #b13e4b; border-color: #ffb5b5; }
+        .footer { display: flex; justify-content: space-between; align-items: center; color: #91b9d6; font-size: 0.8rem; flex-wrap: wrap; gap: 8px; }
+        .reset-btn { background: transparent; border: 1px solid #5787a8; color: #d4ecff; padding: 4px 20px; border-radius: 30px; cursor: pointer; }
+        .reset-btn:hover { background: #1e4a69; }
+        .achievement { background: #2f4d66; padding: 4px 12px; border-radius: 30px; color: #f9e571; }
+        .game-name, .studio-name { color: #ffd966; font-weight: 600; }
+        .crash-warning { color: #ff6b6b; font-weight: bold; }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <h1>🚀 网游工作室模拟器</h1>
+    <div class="sub">请输入文本请输入文本请输入文本请输入文本请输入文本</div>
+    <div class="config-panel">
+        <label>🏢 工作室:</label><input type="text" id="studioName" value="请输入文本">
+        <label>🎮 游戏:</label><input type="text" id="gameTitle" value="请输入文本">
+        <label>🎯 类型:</label>
+        <select id="gameType">
+            <option value="tower">塔防</option><option value="moba">MOBA</option><option value="rpg">RPG</option>
+            <option value="fps">FPS</option><option value="slg">SLG</option><option value="mmo">MMORPG</option>
+            <option value="card">卡牌</option><option value="battle">大逃杀</option><option value="openworld">开放世界</option>
+        </select>
+        <button class="start-btn" id="startGame">🚀 开始运营</button>
+    </div>
+
+    <div class="dashboard">
+        <div class="metric-card"><div class="metric-title">🖥️ 稳定 <span class="metric-value" id="stabVal">70</span></div><div class="bar-bg"><div class="bar-fill fill-stability" id="stabBar" style="width:70%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">😊 满意 <span class="metric-value" id="satVal">70</span></div><div class="bar-bg"><div class="bar-fill fill-satisfaction" id="satBar" style="width:70%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">🔋 精力 <span class="metric-value" id="engVal">80</span></div><div class="bar-bg"><div class="bar-fill fill-energy" id="engBar" style="width:80%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">💰 资金 <span class="metric-value" id="monVal">1200</span></div><div class="bar-bg"><div class="bar-fill fill-money" id="monBar" style="width:60%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">👥 在线 <span class="metric-value" id="playerVal">1200</span></div><div class="bar-bg"><div class="bar-fill fill-stability" id="playerBar" style="width:60%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">📊 负载 <span class="metric-value" id="loadVal">45%</span></div><div class="bar-bg"><div class="bar-fill fill-energy" id="loadBar" style="width:45%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">💾 硬盘 <span class="metric-value" id="diskVal">500/1000</span></div><div class="bar-bg"><div class="bar-fill fill-disk" id="diskBar" style="width:50%"></div></div></div>
+        <div class="metric-card"><div class="metric-title">⚙️ 状态 <span class="metric-value" id="statusVal">正常</span></div><div class="bar-bg"></div></div>
+        <div class="metric-card"><div class="metric-title">　</div><div class="bar-bg"></div></div>
+    </div>
+
+    <div class="expansion-panel">
+        <div class="engineer-panel"><div class="panel-header"><span class="panel-title">👥 工程师 (17)</span><button class="collapse-btn" id="collapseEng">▼</button></div><div class="engineer-content" id="engContent"><div class="engineer-list" id="engList"></div></div></div>
+        <div class="tech-panel"><div class="panel-header"><span class="panel-title">⚡ 科技 (22)</span><button class="collapse-btn" id="collapseTech">▼</button></div><div class="tech-content" id="techContent"><div class="tech-list" id="techList"></div></div></div>
+    </div>
+
+    <div class="event-area"><div class="event-log" id="eventLog"><div class="log-entry"><span class="log-time">[第0周]</span> 工作室成立</div></div><div class="event-options" id="eventOpts"></div></div>
+
+    <div class="week-control"><div class="ap-display" id="apDisp">⚡ 3/3</div><button class="next-week-btn" id="nextWeek">⏩ 下一周</button></div>
+
+    <div class="action-panel">
+        <button class="action-btn" id="restart">🔄 重启服务</button>
+        <button class="action-btn" id="compensate">🎁 补偿玩家</button>
+        <button class="action-btn" id="rest">☕ 休息</button>
+        <button class="action-btn emergency-btn" id="emergency">🚨 紧急重启</button>
+        <button class="action-btn" id="buyServer">🖥️ 备用服务器</button>
+        <button class="action-btn" id="hostEvent">🎉 玩家活动</button>
+        <button class="action-btn" id="updateGame">📦 发布更新</button>
+        <button class="action-btn" id="expandDisk">💾 硬盘扩容</button>
+        <button class="action-btn" id="lend">📤 出借冗余资源 (3行动点)</button>
+    </div>
+
+    <div class="footer">
+        <span class="achievement" id="achieve">⭐ 新手工作室</span>
+        <span>📅 第 <span id="weekDisp">0</span> 周  📅 事件 <span id="eventCnt">0</span></span>
+        <span class="studio-name" id="studioDisp">请输入文本</span>
+        <span class="game-name" id="gameDisp">请输入文本</span>
+        <button class="reset-btn" id="reset">🔄 重新开局</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    // ----- 简化数据定义 -----
+    const GAME_TYPES = {
+        tower: { stab:2, sat:-1, moneyM:0.9, engRec:1, diskF:1.0 },
+        moba: { stab:-2, sat:1, moneyM:1.3, engRec:0, diskF:1.5 },
+        rpg: { stab:-1, sat:2, moneyM:1.0, engRec:-1, diskF:0.8 },
+        fps: { stab:-2, sat:0, moneyM:1.4, engRec:0, diskF:1.2 },
+        slg: { stab:0, sat:-1, moneyM:0.8, engRec:2, diskF:0.9 },
+        mmo: { stab:-1, sat:1, moneyM:1.1, engRec:1, diskF:1.1 },
+        card: { stab:-2, sat:2, moneyM:0.9, engRec:2, diskF:0.9 },
+        battle: { stab:-3, sat:3, moneyM:1.2, engRec:0, diskF:1.2 },
+        openworld: { stab:-1, sat:0, moneyM:0.7, engRec:1, diskF:1.8 }
+    };
+
+    const ENGINEERS = [
+        { id:'network', name:'🌐 网络工程师', desc:'网络事件+资金', cost:300 },
+        { id:'dba', name:'🗄️ 数据库管理员', desc:'数据库事件+稳定', cost:300 },
+        { id:'expert', name:'🧠 全能专家', desc:'效果+10%,精力+2', cost:500 },
+        { id:'security', name:'🛡️ 安全工程师', desc:'事件负面-20%,资金+50', cost:400 },
+        { id:'architect', name:'🏗️ 架构师', desc:'稳定+1,负载-10%', cost:500 },
+        { id:'ai', name:'🤖 AI工程师', desc:'稳定+2,资金-50', cost:600 },
+        { id:'storage', name:'💾 存储工程师', desc:'硬盘-10%', cost:400 },
+        { id:'uiux', name:'🎨 UI/UX设计师', desc:'满意+1,资金-20', cost:350 },
+        { id:'opsLead', name:'📋 运维主管', desc:'精力+1,资金-30', cost:450 },
+        { id:'performance', name:'⚙️ 性能工程师', desc:'负载-5%,资金-30', cost:450 },
+        { id:'tester', name:'🔍 测试工程师', desc:'事件概率-2%,资金-20', cost:350 },
+        { id:'csLead', name:'📞 客服主管', desc:'满意+2,资金-40', cost:400 },
+        { id:'dataAnalyst', name:'📊 数据分析师', desc:'资金+5%,精力-1', cost:500 },
+        { id:'projectManager', name:'📈 项目经理', desc:'稳定+2,资金-50', cost:600 },
+        { id:'gameDesigner', name:'🎮 游戏设计师', desc:'满意+1,稳定+1,资金-30', cost:450 },
+        { id:'communityManager', name:'💬 社区经理', desc:'满意+2,资金-30', cost:400 },
+        { id:'hardwareEngineer', name:'🖥️ 硬件工程师', desc:'稳定+2,负载-5%,资金-40', cost:550 }
+    ];
+
+    const TECHS = [
+        { id:'serverBoost', name:'🔧 服务器强化', desc:'衰减减少', baseCost:500 },
+        { id:'loadOptimize', name:'📉 负载优化', desc:'负载-20%', baseCost:400 },
+        { id:'moneyMaster', name:'💰 资金管理', desc:'资金+50%', baseCost:600 },
+        { id:'trainEngineers', name:'📚 工程师培训', desc:'工程师效果+25%', baseCost:800 },
+        { id:'autoOps', name:'🤖 自动运维', desc:'精力+2', baseCost:700 },
+        { id:'cloudBackup', name:'☁️ 云备份', desc:'硬盘+50%,资金-10%', baseCost:800 },
+        { id:'smartScheduling', name:'⚡ 智能调度', desc:'负载-15%', baseCost:600 },
+        { id:'distributedStorage', name:'🌐 分布式存储', desc:'硬盘+30%,负载-5%', baseCost:900 },
+        { id:'hardwareAccel', name:'⚙️ 硬件加速', desc:'稳定+1,负载-5%', baseCost:700 },
+        { id:'dataCompression', name:'🗜️ 数据压缩', desc:'硬盘-10%', baseCost:600 },
+        { id:'elasticScaling', name:'📈 弹性伸缩', desc:'负载>70%时稳定+3,资金-50', baseCost:800 },
+        { id:'opsAutomation', name:'🤖 运维自动化', desc:'精力+1,资金+10%', baseCost:750 },
+        { id:'advancedMoney', name:'💎 高级氪金', desc:'资金+100%,满意-1', baseCost:1000, unlock:'氪金方向' },
+        { id:'cdn', name:'🌍 内容分发网络', desc:'负载-15%,硬盘-10%', baseCost:800, unlock:'内容方向' },
+        { id:'dynamicBalance', name:'⚖️ 动态平衡', desc:'稳定+2,满意+1', baseCost:900, unlock:'平衡方向' },
+        { id:'overclock', name:'⚡ 超频', desc:'稳定+3,负载+10%', baseCost:700, unlock:'性能优化' },
+        { id:'communityMgr', name:'📢 社区管理', desc:'满意+2,资金+100', baseCost:850, unlock:'社区运营' },
+        { id:'socialNetwork', name:'📱 社交平台', desc:'满意+1,硬盘-5%', baseCost:600, unlock:'社交系统' },
+        { id:'crossServer', name:'⚔️ 跨服架构', desc:'硬盘+100%,稳定-3', baseCost:1200, unlock:'跨服战' },
+        { id:'aiOps', name:'🧠 AI运维', desc:'精力+1,稳定+1,资金+10%', baseCost:950, unlock:'AI方向' },
+        { id:'quantum', name:'⚛️ 量子计算', desc:'稳定+3,精力-2,资金+30%', baseCost:1500, unlock:'大逃杀方向' },
+        { id:'greenEnergy', name:'🌱 绿色能源', desc:'负载-5%,硬盘-5%,精力+2,资金-5%', baseCost:700, unlock:'环保方向' }
+    ];
+
+    const EVENTS = [
+        { name:'数据库连接池耗尽', desc:'大量连接超时', type:'database', opt1:['重启数据库',-10,-5,-5,0], opt2:['紧急扩容',-5,5,-15,-200] },
+        { name:'DDoS 攻击', desc:'流量异常', type:'network', opt1:['启用流量清洗',-5,0,-10,0], opt2:['请求云商清洗',5,0,-5,-300] },
+        { name:'玩家论坛爆炸', desc:'延迟高抱怨', type:'social', opt1:['发帖安抚',0,5,-5,0], opt2:['紧急优化网络',-10,10,-10,0] },
+        { name:'内存泄漏预警', desc:'内存攀升', type:'database', opt1:['临时重启服务',-5,0,-5,0], opt2:['在线dump分析',5,0,-15,0] },
+        { name:'新版本更新', desc:'有风险', type:'general', opt1:['立即更新',-15,10,-10,0], opt2:['推迟更新',0,-5,0,0] },
+        { name:'运营商线路故障', desc:'区域无法连接', type:'network', opt1:['启用备用线路',5,5,-5,-250], opt2:['等待恢复',-5,-10,0,0] },
+        { name:'内部员工误操作', desc:'配置错误', type:'general', opt1:['快速回滚',-5,-5,-10,0], opt2:['紧急修复',5,0,-20,-100] },
+        { name:'新游戏活动火爆', desc:'人数暴增', type:'general', opt1:['加节点扩容',10,5,-10,-300], opt2:['排队限流',5,-10,-5,0] },
+        { name:'挖矿病毒爆发', desc:'CPU被占', type:'network', opt1:['杀毒+修补',5,0,-15,0], opt2:['重装系统',-15,-5,-10,-200] },
+        { name:'服务器过热', desc:'机房温度高', type:'hardware', opt1:['开启空调',-5,0,-5,-100], opt2:['降频运行',5,-5,0,0] },
+        { name:'竞品发布', desc:'玩家流失', type:'market', opt1:['加大宣传',0,-10,-10,-200], opt2:['紧急更新',-10,5,-5,-100] },
+        { name:'员工罢工', desc:'要求加薪', type:'hr', opt1:['同意加薪',0,0,10,-300], opt2:['拒绝',-10,-10,-20,0] }
+    ];
+
+    // ----- 状态 -----
+    let state = {
+        stab:70, sat:70, eng:80, mon:1200, players:1200, load:45,
+        week:0, eventCnt:0, ap:3, crashed:false, crashWeeks:0,
+        infinite:false, lastCrash:0, diskTotal:1000,
+        engineers:{}, techs:{}, unlock:{}, updateBuff:{ moneyM:1.0, satDelta:0, diskCost:0.5, name:'基础版本' }
+    };
+    let studio = '请输入文本', game = '请输入文本', type = 'tower';
+    let gameActive = true, eventActive = false, curEvent = null;
+
+    // 初始化工程师/科技对象
+    ENGINEERS.forEach(e => state.engineers[e.id] = false);
+    TECHS.forEach(t => state.techs[t.id] = false);
+    ['advancedMoney','cdn','dynamicBalance','overclock','communityMgr','socialNetwork','crossServer','aiOps','quantum','greenEnergy'].forEach(k => state.unlock[k] = false);
+
+    // ----- DOM 映射 -----
+    const dom = {
+        stabVal: g('stabVal'), stabBar: g('stabBar'), satVal: g('satVal'), satBar: g('satBar'),
+        engVal: g('engVal'), engBar: g('engBar'), monVal: g('monVal'), monBar: g('monBar'),
+        playerVal: g('playerVal'), playerBar: g('playerBar'), loadVal: g('loadVal'), loadBar: g('loadBar'),
+        diskVal: g('diskVal'), diskBar: g('diskBar'), statusVal: g('statusVal'),
+        weekDisp: g('weekDisp'), eventCnt: g('eventCnt'), apDisp: g('apDisp'),
+        achieve: g('achieve'), studioDisp: g('studioDisp'), gameDisp: g('gameDisp'),
+        eventLog: g('eventLog'), eventOpts: g('eventOpts'), nextWeek: g('nextWeek'),
+        engList: g('engList'), techList: g('techList'),
+        collapseEng: g('collapseEng'), engContent: g('engContent'),
+        collapseTech: g('collapseTech'), techContent: g('techContent')
+    };
+    function g(id) { return document.getElementById(id); }
+
+    // ----- 工具函数 -----
+    function log(msg) {
+        // 游戏结束后只允许记录结束或评分消息
+        if (!gameActive && !msg.includes('结束') && !msg.includes('评分')) return;
+        let entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.innerHTML = `<span class="log-time">[第${state.week}周]</span> ${msg}`;
+        dom.eventLog.appendChild(entry);
+        dom.eventLog.scrollTop = dom.eventLog.scrollHeight;
+        if (dom.eventLog.children.length>30) dom.eventLog.removeChild(dom.eventLog.children[0]);
+    }
+
+    function refreshUI() {
+        state.stab = Math.min(100, Math.max(0, state.stab));
+        state.sat = Math.min(100, Math.max(0, state.sat));
+        state.eng = Math.min(100, Math.max(0, state.eng));
+        if (state.mon < 0) state.mon = 0;
+        dom.stabBar.style.width = state.stab+'%'; dom.stabVal.innerText = state.stab;
+        dom.satBar.style.width = state.sat+'%'; dom.satVal.innerText = state.sat;
+        dom.engBar.style.width = state.eng+'%'; dom.engVal.innerText = state.eng;
+        if (state.infinite) { dom.monVal.innerText = 'max'; dom.monBar.style.width = '100%'; }
+        else { let p = Math.min(100, Math.floor(state.mon/2500*100)); dom.monBar.style.width = p+'%'; dom.monVal.innerText = state.mon; }
+        state.players = Math.floor(200 + (state.sat/100)*1800);
+        dom.playerVal.innerText = state.players; dom.playerBar.style.width = Math.min(100, Math.floor(state.players/2000*100))+'%';
+        let diskFactor = (GAME_TYPES[type]?.diskF||1) * (state.engineers.storage?0.9:1) * (state.techs.distributedStorage?0.95:1) * (state.techs.dataCompression?0.9:1) * (state.techs.cdn?0.9:1) * (state.techs.greenEnergy?0.95:1);
+        let used = Math.min(state.diskTotal, Math.floor(state.players * state.updateBuff.diskCost * diskFactor));
+        let diskP = Math.floor(used/state.diskTotal*100);
+        dom.diskBar.style.width = diskP+'%'; dom.diskVal.innerText = used+'/'+state.diskTotal;
+        let load = 40 + (100-state.stab)*0.3 + (state.players/2000)*30 + (used/state.diskTotal)*20;
+        if (state.techs.loadOptimize) load*=0.8; if (state.techs.smartScheduling) load*=0.85; if (state.techs.hardwareAccel) load*=0.95; if (state.engineers.architect) load*=0.9; if (state.techs.distributedStorage) load*=0.95; if (state.techs.cdn) load*=0.85; if (state.techs.overclock) load*=1.1; if (state.engineers.performance) load*=0.95; if (state.techs.aiOps) load*=0.9; if (state.techs.greenEnergy) load*=0.95;
+        state.load = Math.min(100, Math.floor(load));
+        dom.loadVal.innerText = state.load+'%'; dom.loadBar.style.width = state.load+'%';
+        dom.statusVal.innerText = state.crashed ? `崩溃中 (${state.crashWeeks+1}/4)` : (used>state.diskTotal*0.9?'⚠️ 硬盘告急':'正常');
+        dom.statusVal.classList.toggle('crash-warning', state.crashed);
+        dom.weekDisp.innerText = state.week; dom.apDisp.innerText = `⚡ ${state.ap}/3`; dom.eventCnt.innerText = state.eventCnt;
+        let ach = state.week>=100?'传奇工作室':state.week>=50?'金牌工作室':state.week>=25?'资深工作室':state.week>=10?'熟练工作室':'新手工作室';
+        dom.achieve.innerText = '⭐ '+ach;
+        dom.studioDisp.innerText = studio; dom.gameDisp.innerText = game;
+        document.querySelectorAll('.action-btn').forEach(btn => btn.disabled = !gameActive || eventActive || state.ap<=0);
+    }
+
+    function changeStats(dStab, dSat, dEng, dMon, fromEvent=false) {
+        if (!gameActive) return;
+        if (fromEvent && state.engineers.security) {
+            if (dStab<0) dStab = Math.ceil(dStab*0.8);
+            if (dSat<0) dSat = Math.ceil(dSat*0.8);
+            if (dEng<0) dEng = Math.ceil(dEng*0.8);
+            if (dMon<0) dMon = Math.ceil(dMon*0.8);
+        }
+        if (state.engineers.expert) {
+            let boost = state.techs.trainEngineers ? 1.25 : 1.0;
+            dStab = Math.round(dStab * (1+0.1*boost));
+            dSat = Math.round(dSat * (1+0.1*boost));
+            dEng = Math.round(dEng * (1+0.1*boost));
+            dMon = Math.round(dMon * (1+0.1*boost));
+        }
+        if (state.infinite && dMon<0) dMon = 0;
+        state.stab += dStab; state.sat += dSat; state.eng += dEng; state.mon += dMon;
+        refreshUI(); checkGameOver();
+    }
+
+    function performAction(cost, func, msg) { if (state.ap<cost) { log('⚠️ 行动点不足'); return false; } state.ap -= cost; func(); log(msg); refreshUI(); return true; }
+
+    function checkGameOver() {
+        if (!gameActive) return;
+        let reason = null;
+        if (state.sat <= 0) reason = '玩家弃游…… 工作室倒闭';
+        else if (state.eng <= 0) reason = '工程师累垮…… 工作室倒闭';
+        else if (state.mon < 0 && !state.infinite) reason = '资金断裂…… 破产';
+        if (reason) {
+            log(`💔 ${reason}`);
+            showFinalScore();        // 先显示评分
+            gameActive = false;      // 再标记游戏结束
+            document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+            g('reset').disabled = false; g('startGame').disabled = false; dom.eventOpts.innerHTML = ''; dom.nextWeek.disabled = true;
+        }
+    }
+
+    function showFinalScore() {
+        let engCnt = Object.values(state.engineers).filter(v=>v).length, techCnt = Object.values(state.techs).filter(v=>v).length;
+        let score = state.week*5 + state.eventCnt*3 + engCnt*20 + techCnt*15 + Math.floor((state.infinite?999999:state.mon)/100)*2 + state.stab + state.sat + state.eng;
+        let grade = score>=800?'S':score>=600?'A':score>=400?'B':score>=200?'C':'D';
+        log('════════════════════'); 
+        log(`🏁 最终评分 工作室:${studio} 游戏:${game}`); 
+        log(`存活:${state.week}周 事件:${state.eventCnt} 工程师:${engCnt}/17 科技:${techCnt}/22`); 
+        log(`资金:${state.infinite?'max':state.mon} 稳定:${state.stab} 满意:${state.sat} 精力:${state.eng}`); 
+        log(`综合得分:${score} 评级:${grade}`); 
+        log('════════════════════');
+    }
+
+    // ----- 事件触发 -----
+    function triggerEvent() {
+        if (!gameActive || eventActive) return;
+        let prob = 0.2 - (state.engineers.tester?0.02:0);
+        if (Math.random() > prob) return;
+        state.eventCnt++;
+        let e = EVENTS[Math.floor(Math.random()*EVENTS.length)];
+        log(`🔥 ${e.name} —— ${e.desc}`);
+        eventActive = true; curEvent = e;
+        dom.eventOpts.innerHTML = '';
+        [e.opt1, e.opt2].forEach((opt,i) => {
+            let btn = document.createElement('button'); btn.className = 'event-option-btn';
+            btn.innerText = opt[0] + ` (稳定${opt[1]>=0?'+':''}${opt[1]},满意${opt[2]>=0?'+':''}${opt[2]},精力${opt[3]>=0?'+':''}${opt[3]},资金${opt[4]>=0?'+':''}${opt[4]})`;
+            btn.onclick = () => {
+                if (!gameActive || !eventActive) return;
+                log(`✔ 选择了: ${opt[0]}`);
+                if (state.engineers.network && e.type==='network') { changeStats(2,0,-1,10); log('📡 网络工程师发挥专长'); }
+                if (state.engineers.dba && e.type==='database') { changeStats(3,2,-2,5); log('🗄️ 数据库管理员优化'); }
+                changeStats(opt[1], opt[2], opt[3], opt[4], true);
+                eventActive = false; curEvent = null; dom.eventOpts.innerHTML = ''; dom.nextWeek.disabled = false; refreshUI();
+            };
+            dom.eventOpts.appendChild(btn);
+        });
+        dom.nextWeek.disabled = true; refreshUI();
+    }
+
+    // ----- 每周推进 -----
+    function advanceWeek() {
+        if (!gameActive) return;
+        if (eventActive) { log('⚠️ 请先处理当前事件'); return; }
+        state.week++;
+        if (state.infinite && state.week%7===0 && state.week!==state.lastCrash) { state.stab=0; state.lastCrash=state.week; log('🍔 美食诅咒！服务器崩溃！'); }
+
+        let loadFactor = Math.floor(state.load/25), diskOver = state.players > state.diskTotal*0.9 ? 2 : 0;
+        let dStab = -2 - loadFactor*2 - diskOver, dSat = state.stab<40 ? -3 : -2, dEng = state.eng<30 ? 3 : 4, dMon = Math.floor(state.players/120 * state.updateBuff.moneyM);
+        let bonus = GAME_TYPES[type];
+        if (bonus) { dStab += bonus.stab||0; dSat += bonus.sat||0; dEng += bonus.engRec||0; dMon = Math.floor(dMon * (bonus.moneyM||1)); }
+        // 工程师/科技加成
+        if (state.techs.moneyMaster) dMon = Math.floor(dMon*1.5);
+        if (state.engineers.expert) dEng += 2;
+        if (state.techs.autoOps) dEng += 2;
+        if (state.engineers.architect) dStab += 1;
+        if (state.engineers.ai) { dStab += 2; dMon -= 50; }
+        if (state.techs.cloudBackup) dMon = Math.floor(dMon*0.9);
+        if (state.techs.hardwareAccel) dStab += 1;
+        if (state.techs.opsAutomation) { dEng += 1; dMon = Math.floor(dMon*1.1); }
+        if (state.techs.elasticScaling && state.load>70) { dStab += 3; dMon -= 50; }
+        if (state.engineers.uiux) dSat += 1;
+        if (state.engineers.opsLead) dEng += 1;
+        if (state.techs.advancedMoney) dMon = Math.floor(dMon*2);
+        if (state.techs.dynamicBalance) { dStab += 2; dSat += 1; }
+        if (state.techs.overclock) dStab += 3;
+        if (state.techs.communityMgr) { dSat += 2; dMon += 100; }
+        if (state.techs.socialNetwork) dSat += 1;
+        if (state.techs.crossServer) dStab -= 3;
+        if (state.engineers.performance) dMon -= 30;
+        if (state.engineers.tester) dMon -= 20;
+        if (state.engineers.csLead) { dSat += 2; dMon -= 40; }
+        if (state.engineers.dataAnalyst) { dMon = Math.floor(dMon*1.05); dEng -= 1; }
+        if (state.engineers.projectManager) { dStab += 2; dMon -= 50; }
+        if (state.engineers.gameDesigner) { dSat += 1; dStab += 1; dMon -= 30; }
+        if (state.engineers.communityManager) { dSat += 2; dMon -= 30; }
+        if (state.engineers.hardwareEngineer) { dStab += 2; state.load = Math.floor(state.load*0.95); dMon -= 40; }
+        if (state.techs.aiOps) { dEng += 1; dStab += 1; dMon = Math.floor(dMon*1.1); }
+        if (state.techs.quantum) { dStab += 3; dEng -= 2; dMon = Math.floor(dMon*1.3); }
+        if (state.techs.greenEnergy) { dMon = Math.floor(dMon*0.95); dEng += 2; }
+
+        state.sat += state.updateBuff.satDelta;
+        if (!state.infinite || dMon>=0) state.mon += dMon;
+        state.stab += dStab; state.sat += dSat; state.eng += dEng;
+
+        // 崩溃处理
+        if (state.stab <= 0) {
+            if (!state.crashed) { state.crashed = true; state.crashWeeks = 1; log('💥 服务器进入崩溃状态！4周内恢复！'); }
+            else { state.crashWeeks++; log(`⚠️ 崩溃第${state.crashWeeks}周...`); if (state.crashWeeks>=4) { gameActive=false; log('💔 连续崩溃4周，倒闭！'); showFinalScore(); document.querySelectorAll('button').forEach(b=>b.disabled=true); g('reset').disabled=false; g('startGame').disabled=false; dom.eventOpts.innerHTML=''; dom.nextWeek.disabled=true; refreshUI(); return; } }
+        } else { if (state.crashed) { state.crashed=false; state.crashWeeks=0; log('✅ 恢复稳定！'); } }
+
+        state.ap = 3;
+        triggerEvent();
+        if (state.week===10||state.week===25||state.week===50) log(`🎉 成就：${state.week}周`);
+        refreshUI(); checkGameOver();
+    }
+
+    // ----- 渲染工程师/科技 -----
+    function renderEngineers() {
+        let html = '';
+        ENGINEERS.forEach(e => {
+            html += `<div class="engineer-item"><div class="engineer-info"><span class="engineer-name">${e.name}</span><span class="engineer-desc">${e.desc}</span></div><button class="engineer-btn" id="hire_${e.id}" ${state.engineers[e.id]?'disabled':''}>${state.engineers[e.id]?'已雇':`雇佣${e.cost}`}</button></div>`;
+        });
+        dom.engList.innerHTML = html;
+        ENGINEERS.forEach(e => {
+            g(`hire_${e.id}`)?.addEventListener('click', () => {
+                if (!gameActive) return;
+                if ((state.infinite || state.mon >= e.cost) && !state.engineers[e.id]) {
+                    if (!state.infinite) state.mon -= e.cost;
+                    state.engineers[e.id] = true;
+                    log(`雇佣了${e.name}，花费${e.cost}`);
+                    renderEngineers(); refreshUI();
+                } else log('资金不足或已雇佣');
+            });
+        });
+    }
+
+    function renderTechs() {
+        let html = '';
+        TECHS.forEach(t => {
+            let locked = t.unlock && !state.unlock[t.id];
+            html += `<div class="tech-item ${locked?'tech-locked':''}"><div class="tech-info"><span class="tech-name">${t.name}</span><span class="tech-desc">${t.desc}</span></div><button class="tech-btn" id="tech_${t.id}" ${state.techs[t.id]||locked?'disabled':''}>${state.techs[t.id]?'已购':(locked?'需'+t.unlock:`购买${t.baseCost}`)}</button></div>`;
+        });
+        dom.techList.innerHTML = html;
+        TECHS.forEach(t => {
+            g(`tech_${t.id}`)?.addEventListener('click', () => {
+                if (!gameActive) return;
+                if (t.unlock && !state.unlock[t.id]) { log('该科技尚未解锁'); return; }
+                if ((state.infinite || state.mon >= t.baseCost) && !state.techs[t.id]) {
+                    if (!state.infinite) state.mon -= t.baseCost;
+                    state.techs[t.id] = true;
+                    if (t.id==='cloudBackup') state.diskTotal = Math.floor(state.diskTotal*1.5);
+                    if (t.id==='distributedStorage') state.diskTotal = Math.floor(state.diskTotal*1.3);
+                    if (t.id==='crossServer') state.diskTotal = Math.floor(state.diskTotal*2);
+                    if (t.id==='greenEnergy') state.diskTotal = Math.floor(state.diskTotal*1.1);
+                    log(`科技升级：${t.name}，花费${t.baseCost}`);
+                    renderTechs(); refreshUI();
+                } else log('资金不足或已升级');
+            });
+        });
+    }
+
+    // ----- 更新方向 (9个) -----
+    function showUpdates() {
+        if (!gameActive) return;
+        if (eventActive && curEvent) { log('请先处理当前事件'); return; }
+        if (eventActive && !curEvent) { log('请先完成当前更新选择'); return; }
+        let opts = [
+            ['💰 氪金方向 (资金+200,满意-5,后续x1.2) [解锁高级氪金]',()=>{ performAction(1,()=>{ changeStats(0,-5,-5,200); state.updateBuff.moneyM=1.2; state.updateBuff.name='氪金版'; state.unlock.advancedMoney=true; log('氪金版，解锁高级氪金'); },'氪金方向'); }],
+            ['🎨 内容方向 (满意+10,硬盘+50,资金-100) [解锁CDN]',()=>{ if(state.mon<100 && !state.infinite) { log('资金不足'); return; } performAction(1,()=>{ changeStats(0,10,-5,-100); state.updateBuff.diskCost+=0.1; state.diskTotal+=200; state.updateBuff.name='内容版'; state.unlock.cdn=true; log('内容版，解锁CDN'); },'内容方向'); }],
+            ['⚖️ 平衡方向 (稳定+5,满意+5,精力-5) [解锁动态平衡]',()=>{ performAction(1,()=>{ changeStats(5,5,-5,0); state.updateBuff.name='平衡版'; state.unlock.dynamicBalance=true; log('平衡版，解锁动态平衡'); },'平衡方向'); }],
+            ['⚡ 性能优化 (稳定+5,负载-10%,资金-100) [解锁超频]',()=>{ if(state.mon<100 && !state.infinite) { log('资金不足'); return; } performAction(1,()=>{ changeStats(5,0,-5,-100); state.load=Math.floor(state.load*0.9); state.updateBuff.name='性能版'; state.unlock.overclock=true; log('性能版，解锁超频'); },'性能优化'); }],
+            ['📢 社区运营 (满意+8,资金+100,精力-8) [解锁社区管理]',()=>{ performAction(1,()=>{ changeStats(0,8,-8,100); state.updateBuff.name='社区版'; state.unlock.communityMgr=true; log('社区版，解锁社区管理'); },'社区运营'); }],
+            ['💬 社交系统 (满意+10,精力-10,后续满意+1) [解锁社交平台]',()=>{ performAction(1,()=>{ changeStats(0,10,-10,0); state.updateBuff.satDelta+=1; state.updateBuff.name='社交版'; state.unlock.socialNetwork=true; log('社交版，解锁社交平台'); },'社交系统'); }],
+            ['⚔️ 跨服战 (资金+300,稳定-15,精力-10,后续硬盘+0.1) [解锁跨服架构]',()=>{ performAction(1,()=>{ changeStats(-15,0,-10,300); state.updateBuff.diskCost+=0.1; state.updateBuff.name='跨服版'; state.unlock.crossServer=true; log('跨服版，解锁跨服架构'); },'跨服战'); }],
+            ['🤖 AI方向 (稳定+5,精力-5,资金-100,事件-2%) [解锁AI运维]',()=>{ if(state.mon<100 && !state.infinite) { log('资金不足'); return; } performAction(1,()=>{ changeStats(5,0,-5,-100); window.eventProbMult=(window.eventProbMult||1)*0.9; state.updateBuff.name='AI版'; state.unlock.aiOps=true; log('AI版，解锁AI运维'); },'AI方向'); }],
+            ['🌿 环保方向 (精力+10,资金-200,硬盘-10%) [解锁绿色能源]',()=>{ if(state.mon<200 && !state.infinite) { log('资金不足'); return; } performAction(1,()=>{ changeStats(0,0,10,-200); state.updateBuff.diskCost*=0.9; state.updateBuff.name='环保版'; state.unlock.greenEnergy=true; log('环保版，解锁绿色能源'); },'环保方向'); }]
+        ];
+        dom.eventOpts.innerHTML = '';
+        opts.forEach(([text,func]) => {
+            let btn = document.createElement('button'); btn.className = 'event-option-btn'; btn.innerText = text;
+            btn.onclick = () => { func(); if (!eventActive) { dom.eventOpts.innerHTML = ''; dom.nextWeek.disabled = false; renderTechs(); } };
+            dom.eventOpts.appendChild(btn);
+        });
+        let cancel = document.createElement('button'); cancel.className = 'event-option-btn'; cancel.innerText = '❌ 取消';
+        cancel.onclick = () => { dom.eventOpts.innerHTML = ''; eventActive = false; curEvent = null; dom.nextWeek.disabled = false; log('已取消'); };
+        dom.eventOpts.appendChild(cancel);
+        eventActive = true; curEvent = null; dom.nextWeek.disabled = true; refreshUI();
+    }
+
+    // ----- 日常操作绑定 -----
+    function bindActions() {
+        g('restart').onclick = () => performAction(1,()=>changeStats(5,2,-10,0),'重启服务');
+        g('compensate').onclick = () => performAction(1,()=>changeStats(0,8,-5,-50),'补偿玩家');
+        g('rest').onclick = () => performAction(1,()=>changeStats(-3,0,15,0),'休息');
+        g('emergency').onclick = () => performAction(1,()=>changeStats(20,-10,-20,0),'紧急重启');
+        g('buyServer').onclick = () => {
+            if (!gameActive || eventActive) return;
+            if (state.ap<1) { log('行动点不足'); return; }
+            if (!state.infinite && state.mon<200) { log('资金不足'); return; }
+            state.ap--; if (!state.infinite) state.mon -= 200; changeStats(15,0,-5,0); log('购买备用服务器'); refreshUI();
+        };
+        g('hostEvent').onclick = () => {
+            if (!gameActive || eventActive) return;
+            if (state.ap<1) { log('行动点不足'); return; }
+            if (!state.infinite && state.mon<150) { log('资金不足'); return; }
+            state.ap--; if (!state.infinite) state.mon -= 150; changeStats(-5,20,-10,0); log('举办玩家活动'); refreshUI();
+        };
+        g('updateGame').onclick = showUpdates;
+        g('expandDisk').onclick = () => {
+            if (!gameActive || eventActive) return;
+            if (state.ap<1) { log('行动点不足'); return; }
+            if (!state.infinite && state.mon<200) { log('资金不足'); return; }
+            state.ap--; if (!state.infinite) state.mon -= 200; state.diskTotal += 200; log('硬盘扩容+200GB'); refreshUI();
+        };
+        g('lend').onclick = () => {
+            if (!gameActive || eventActive) return;
+            if (state.ap<3) { log('行动点不足'); return; }
+            state.ap -= 3; changeStats(-5,-5,-5,800); log('出借冗余资源，获得800资金'); refreshUI();
+        };
+        dom.nextWeek.onclick = advanceWeek;
+    }
+
+    // ----- 重置/开始游戏 -----
+    function resetGame() {
+        studio = g('studioName').value.trim() || '无名';
+        game = g('gameTitle').value.trim() || '无名';
+        type = g('gameType').value;
+        let base = GAME_TYPES[type];
+        state = {
+            stab: type==='tower'?85:type==='moba'?60:type==='rpg'?65:type==='fps'?60:type==='slg'?80:type==='mmo'?70:type==='card'?65:type==='battle'?60:70,
+            sat: type==='tower'?60:type==='moba'?70:type==='rpg'?85:type==='fps'?70:type==='slg'?65:type==='mmo'?75:type==='card'?80:type==='battle'?75:65,
+            eng: type==='tower'?75:type==='moba'?70:type==='rpg'?85:type==='fps'?75:type==='slg'?70:type==='mmo'?70:type==='card'?85:type==='battle'?70:75,
+            mon: type==='tower'?1000:type==='moba'?1500:type==='rpg'?1100:type==='fps'?1400:type==='slg'?900:type==='mmo'?1100:type==='card'?1000:type==='battle'?1300:900,
+            players:1200, load:45, week:0, eventCnt:0, ap:3, crashed:false, crashWeeks:0,
+            infinite: (game==='美食大战老鼠' && type==='tower'), lastCrash:0,
+            diskTotal: type==='tower'?1200:type==='moba'?800:type==='rpg'?1000:type==='fps'?900:type==='slg'?1100:type==='mmo'?1100:type==='card'?900:type==='battle'?900:1500,
+            engineers:{}, techs:{}, unlock:{}, updateBuff:{ moneyM:1.0, satDelta:0, diskCost:0.5, name:'基础版本' }
+        };
+        ENGINEERS.forEach(e => state.engineers[e.id] = false);
+        TECHS.forEach(t => state.techs[t.id] = false);
+        ['advancedMoney','cdn','dynamicBalance','overclock','communityMgr','socialNetwork','crossServer','aiOps','quantum','greenEnergy'].forEach(k => state.unlock[k] = false);
+        if (state.infinite) { state.mon = 999999; log('🍔 彩蛋激活！资金无限，每7周崩溃！'); }
+        gameActive = true; eventActive = false; curEvent = null;
+        window.eventProbMult = 1.0;
+        dom.eventOpts.innerHTML = ''; dom.nextWeek.disabled = false;
+        dom.eventLog.innerHTML = `<div class="log-entry"><span class="log-time">[第0周]</span> 工作室开业！类型：${g('gameType').options[g('gameType').selectedIndex].text}</div>`;
+        renderEngineers(); renderTechs(); refreshUI();
+    }
+
+    // 折叠
+    let engCollapsed = false, techCollapsed = false;
+    dom.collapseEng.onclick = () => { engCollapsed = !engCollapsed; dom.engContent.classList.toggle('hidden-content', engCollapsed); dom.collapseEng.textContent = engCollapsed ? '▶' : '▼'; };
+    dom.collapseTech.onclick = () => { techCollapsed = !techCollapsed; dom.techContent.classList.toggle('hidden-content', techCollapsed); dom.collapseTech.textContent = techCollapsed ? '▶' : '▼'; };
+
+    g('startGame').onclick = resetGame;
+    g('reset').onclick = resetGame;
+
+    // 初始化
+    bindActions();
+    resetGame();
+})();
+</script>
+</body>
+</html>
