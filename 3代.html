@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>网游工作室模拟器 · 终极版 (事件修复)</title>
+    <title>网游工作室模拟器</title>
     <style>
         /* 样式与上一版完全相同，此处省略以节省篇幅，实际使用时请保留完整样式 */
         * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
@@ -75,15 +75,15 @@
 </head>
 <body>
 <div class="game-container">
-    <h1>🚀 网游工作室模拟器 · 终极版</h1>
-    <div class="sub">9种工程师 · 19项科技 · 版本号 · 科技解锁</div>
+    <h1>🚀 网游工作室模拟器</h1>
+    <div class="sub">请输入文本</div>
 
     <!-- 游戏配置区域 -->
     <div class="config-panel">
         <label>🏢 工作室名:</label>
-        <input type="text" id="studioNameInput" value="艾泽拉斯" maxlength="20">
+        <input type="text" id="studioNameInput" value="文本" maxlength="20">
         <label>🎮 游戏名:</label>
-        <input type="text" id="gameTitleInput" value="魔兽世界" maxlength="20">
+        <input type="text" id="gameTitleInput" value="文本" maxlength="20">
         <label>🎯 主营类型:</label>
         <select id="gameTypeSelect">
             <option value="tower">塔防 - 稳定优先，满意度增长慢</option>
@@ -165,8 +165,8 @@
     <div class="footer">
         <span class="achievement" id="achievementDisplay">⭐ 新手工作室</span>
         <span>📅 第 <span id="weekDisplay">0</span> 周  📅 事件 <span id="eventCounter">0</span></span>
-        <span class="studio-name" id="studioNameDisplay">艾泽拉斯</span>
-        <span class="game-name" id="gameTitleDisplay">魔兽世界</span>
+        <span class="studio-name" id="studioNameDisplay"></span>
+        <span class="game-name" id="gameTitleDisplay"></span>
         <button class="reset-btn" id="resetGameBtn">🔄 重新开局</button>
     </div>
 </div>
@@ -208,8 +208,8 @@
     let lastCrashWeek = 0;
 
     // 游戏配置
-    let studioName = "艾泽拉斯";
-    let gameTitle = "魔兽世界";
+    let studioName = "";
+    let gameTitle = "";
     let gameType = "tower";
 
     // 类型增益 (7种)
@@ -1238,4 +1238,5 @@
 })();
 </script>
 </body>
+
 </html>
