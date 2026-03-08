@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🥞 煎饼果子点击者 · 薄脆宇宙</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            font-family: 'Segoe UI', '华文楷体', 'KaiTi', serif;
+        }
+        body {
+            background: #3e2e1b; /* 深棕色背景 */
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+        #gameWrapper {
+            max-width: 1300px;
+            width: 100%;
+            background: #d9b382;
+            border-radius: 70px 70px 30px 30px;
+            box-shadow: 0 30px 40px rgba(0,0,0,0.9), inset 0 0 0 3px #f5d49c;
+            overflow: hidden;
+            border: 8px solid #b87e44;
+        }
+        #header {
+            background: #cf9f60;
+            padding: 20px 30px;
+            text-align: center;
+            border-bottom: 5px solid #9f6933;
+            box-shadow: inset 0 -3px 0 #f0c48b;
+        }
+        #header h1 {
+            margin: 0;
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: #2d1907;
+            text-shadow: 4px 4px 0 #ffc489, 6px 6px 0 #a76529;
+            letter-spacing: 3px;
+        }
+        #header h1 span {
+            display: inline-block;
+            transform: scale(1.3);
+            margin: 0 8px;
+        }
+        #stats {
+            display: flex;
+            justify-content: space-between;
+            background: #e0b882;
+            padding: 18px 40px;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2e1a06;
+            border-bottom: 4px solid #b0763c;
+            text-shadow: 1px 1px 0 #ffeac2;
+        }
+        #stats div {
+            background: #fff3de;
+            padding: 8px 35px;
+            border-radius: 60px;
+            box-shadow: inset 0 3px 8px rgba(0,0,0,0.1), 0 6px 0 #8b623b;
+            border: 2px solid #b87e44;
+        }
+        #mainArea {
+            display: flex;
+            background: #e6c59f;
+            background-image: radial-gradient(circle at 20% 40%, #ffdeae, #cf9f60);
+            min-height: 400px;
+        }
+        #leftClickZone {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        #bigJianbing {
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle at 35% 35%, #fad269, #c47a2e);
+            border-radius: 50%;
+            box-shadow: 0 22px 0 #794f27, 0 30px 35px rgba(0,0,0,0.6), inset 0 -15px 20px #aa571d, inset 0 12px 25px #ffde8d;
+            cursor: pointer;
+            transition: transform 0.07s, box-shadow 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6rem;
+            text-shadow: 5px 8px 0 #3a250e;
+            color: #ffe49e;
+            border: 8px solid #b46829;
+            transform: scale(1);
+            margin-bottom: 20px;
+        }
+        #bigJianbing:active {
+            transform: scale(0.94);
+            box-shadow: 0 8px 0 #69411e, 0 25px 25px rgba(0,0,0,0.5);
+        }
+        #bigJianbing span {
+            filter: drop-shadow(2px 6px 3px #392813);
+            transform: rotate(-6deg);
+        }
+        #dragonArea {
+            background: #b87c4b;
+            border-radius: 60px;
+            padding: 15px 25px;
+            color: #fff1cf;
+            font-size: 1.4rem;
+            border: 3px solid #6d441f;
+            box-shadow: inset 0 2px 8px #ffd58c;
+            width: 90%;
+            text-align: center;
+            margin-top: 10px;
+        }
+        #dragonButton {
+            background: #f5b06b;
+            border: none;
+            border-radius: 40px;
+            padding: 8px 25px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #9f612e;
+            margin-left: 15px;
+            color: #2d1907;
+        }
+        #rightPanel {
+            flex: 2;
+            padding: 20px 20px 20px 0;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        #buildingContainer {
+            background: #dbb47a;
+            border-radius: 50px 0 0 50px;
+            padding: 15px;
+            border: 3px solid #b1763b;
+            box-shadow: inset 0 0 0 2px #ffe3b3;
+            margin-bottom: 20px;
+        }
+        .buildingRow {
+            display: flex;
+            align-items: center;
+            background: #fff7e6;
+            margin-bottom: 12px;
+            padding: 10px 15px;
+            border-radius: 50px;
+            border: 2px solid #b1763b;
+            box-shadow: 0 5px 0 #86602f, inset 0 1px 5px #ffdba5;
+            font-size: 1.1rem;
+        }
+        .buildingIcon {
+            font-size: 2.6rem;
+            width: 60px;
+            text-align: center;
+            filter: drop-shadow(2px 3px 1px #865f32);
+        }
+        .buildingInfo {
+            flex: 3;
+            padding-left: 10px;
+        }
+        .buildingName {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #3d250d;
+            line-height: 1.2;
+        }
+        .buildingDesc {
+            font-size: 0.85rem;
+            opacity: 0.75;
+        }
+        .buildingStats {
+            flex: 0.9;
+            text-align: center;
+            background: #e2c098;
+            border-radius: 30px;
+            padding: 5px 0;
+            font-weight: bold;
+            border: 1px solid #9e6d34;
+        }
+        .buildingPrice {
+            flex: 0.9;
+            text-align: center;
+            font-weight: 800;
+            color: #b6530a;
+            background: #fbe2c1;
+            border-radius: 30px;
+            padding: 5px 0;
+            border: 1px solid #b1761e;
+            white-space: nowrap;
+        }
+        .buyBtn {
+            flex: 0.7;
+            background: #f5b06b;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 5px;
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #1f1306;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #9f612e, inset 0 2px 8px #ffdc9e;
+            transition: 0.03s linear;
+            text-align: center;
+            border: 1px solid #d9944a;
+            margin-left: 8px;
+        }
+        .buyBtn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #9f612e;
+        }
+        .buyBtn.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+            filter: grayscale(0.5);
+        }
+        #stockPanel {
+            background: #b87c4b;
+            border-radius: 30px;
+            padding: 15px;
+            margin: 10px 0;
+            color: #fff7e0;
+            border: 3px solid #7a512a;
+        }
+        #stockPrice {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ffd966;
+        }
+        .stockBtn {
+            background: #f5b06b;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 20px;
+            font-weight: bold;
+            margin: 0 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #9f612e;
+        }
+        #footer {
+            background: #9e6f42;
+            color: #fef2d6;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2rem;
+            border-top: 4px solid #6f4a27;
+            font-weight: bold;
+        }
+        #eventMessage {
+            background: #feeac0;
+            color: #4f3013;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-size: 1.2rem;
+            box-shadow: inset 0 0 8px #ad7b48;
+            border: 1px solid #b27d41;
+        }
+        #achievementPopup {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #fdeac0;
+            border: 4px solid #c29a48;
+            border-radius: 40px;
+            padding: 15px 30px;
+            box-shadow: 0 10px 20px black;
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d1b05;
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+<div id="gameWrapper">
+    <div id="header">
+        <h1><span>🥞</span> 煎饼果子·薄脆宇宙 <span>🌯</span></h1>
+    </div>
+    <div id="stats">
+        <div id="jianbingDisplay">🥞 <span id="jianbingCount">0</span></div>
+        <div id="cpsDisplay">⚡ <span id="cpsValue">0</span>/秒</div>
+    </div>
+    <div id="mainArea">
+        <div id="leftClickZone">
+            <div id="bigJianbing" role="button" tabindex="0" aria-label="点击制作煎饼果子">
+                <span>🥞</span>
+            </div>
+            <div id="dragonArea">
+                <span>🐉 煎饼龙 Lv.<span id="dragonLevel">0</span></span>
+                <span style="margin-left:15px;">加成: x<span id="dragonMult">1.0</span></span>
+                <button id="dragonButton">喂食(10🥞)</button>
+            </div>
+        </div>
+        <div id="rightPanel">
+            <div id="buildingContainer"></div>
+            <div id="stockPanel">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>📈 煎饼股票</span>
+                    <span id="stockPrice">100</span>
+                    <span>
+                        <button class="stockBtn" id="buyStockBtn">买入</button>
+                        <button class="stockBtn" id="sellStockBtn">卖出</button>
+                    </span>
+                </div>
+                <div style="font-size:1rem;">持有: <span id="stockOwned">0</span>股</div>
+            </div>
+        </div>
+    </div>
+    <div id="footer">
+        <div id="eventMessage">✨ 等待金脆煎饼...</div>
+        <div>🏆 成就: <span id="achievementCount">0</span></div>
+    </div>
+</div>
+<div id="achievementPopup"></div>
+
+<script>
+(function() {
+    // ---------- 深度扩展版煎饼果子点击者 ----------
+    // 建筑数据 (20种，覆盖原版所有类型)
+    const BUILDINGS = [
+        { name: '鸡蛋', baseCps: 0.1, basePrice: 15, emoji: '🥚', desc: '每一颗鸡蛋都让煎饼更诱人' },
+        { name: '煎饼大妈', baseCps: 0.8, basePrice: 100, emoji: '👵', desc: '经验丰富的大妈，手法娴熟' },
+        { name: '鸡蛋农场', baseCps: 4, basePrice: 800, emoji: '🌾', desc: '土鸡蛋源源不断' },
+        { name: '面粉矿', baseCps: 16, basePrice: 6000, emoji: '⛏️', desc: '开采石磨面粉' },
+        { name: '酱料工厂', baseCps: 64, basePrice: 50000, emoji: '🏭', desc: '甜面酱、辣酱批量生产' },
+        { name: '煎饼银行', baseCps: 256, basePrice: 400000, emoji: '🏦', desc: '存储煎饼，产生利息' },
+        { name: '煎饼神殿', baseCps: 1024, basePrice: 3.2e6, emoji: '🛕', desc: '信徒供奉煎饼' },
+        { name: '辣条魔法塔', baseCps: 4096, basePrice: 2.5e7, emoji: '🧙', desc: '召唤辣条为煎饼增香' },
+        { name: '煎饼飞船', baseCps: 16384, basePrice: 2e8, emoji: '🚀', desc: '从外星球运回奇异煎饼' },
+        { name: '酱料实验室', baseCps: 65536, basePrice: 1.6e9, emoji: '🧪', desc: '研发新式酱料' },
+        { name: '煎饼传送门', baseCps: 262144, basePrice: 1.3e10, emoji: '🌀', desc: '连接煎饼异次元' },
+        { name: '煎饼时光机', baseCps: 1.05e6, basePrice: 1e11, emoji: '⏳', desc: '从过去带回古法煎饼' },
+        { name: '反煎饼凝聚器', baseCps: 4.2e6, basePrice: 8e11, emoji: '⚛️', desc: '将能量直接转化为煎饼' },
+        { name: '煎饼棱镜', baseCps: 1.68e7, basePrice: 6.4e12, emoji: '🔮', desc: '折射出无限煎饼' },
+        { name: '运气制造机', baseCps: 6.7e7, basePrice: 5.1e13, emoji: '🎰', desc: '每时每刻都可能爆发' },
+        { name: '分形煎饼', baseCps: 2.68e8, basePrice: 4.1e14, emoji: '🌀', desc: '自我复制的煎饼' },
+        { name: '煎饼控制台', baseCps: 1.07e9, basePrice: 3.3e15, emoji: '🖥️', desc: '代码生成的煎饼' },
+        { name: '煎饼多元宇宙', baseCps: 4.29e9, basePrice: 2.6e16, emoji: '🌌', desc: '无限平行煎饼' },
+        { name: '意识烤箱', baseCps: 1.72e10, basePrice: 2.1e17, emoji: '🧠', desc: '梦想烤出煎饼' },
+        { name: '你自己', baseCps: 6.87e10, basePrice: 1.7e18, emoji: '👤', desc: '无数个你一起摊煎饼' }
+    ];
+
+    // 游戏状态
+    let jianbing = 0;
+    let totalCps = 0;
+    let buildings = [];
+    let upgrades = [];
+    let achievements = [];
+    let goldenActive = false;
+    let goldenTimer = null;
+    let goldenClicks = 0;
+
+    // 煎饼龙
+    let dragonLevel = 0;
+    let dragonFeedCost = 10;
+
+    // 股票
+    let stockPrice = 100;
+    let stockOwned = 0;
+    let stockHistory = 100;
+
+    // DOM 元素
+    const jianbingSpan = document.getElementById('jianbingCount');
+    const cpsSpan = document.getElementById('cpsValue');
+    const bigJianbing = document.getElementById('bigJianbing');
+    const buildingContainer = document.getElementById('buildingContainer');
+    const messageEl = document.getElementById('eventMessage');
+    const achievementPopup = document.getElementById('achievementPopup');
+    const achievementCountSpan = document.getElementById('achievementCount');
+    const dragonLevelSpan = document.getElementById('dragonLevel');
+    const dragonMultSpan = document.getElementById('dragonMult');
+    const dragonBtn = document.getElementById('dragonButton');
+    const stockPriceSpan = document.getElementById('stockPrice');
+    const stockOwnedSpan = document.getElementById('stockOwned');
+    const buyStockBtn = document.getElementById('buyStockBtn');
+    const sellStockBtn = document.getElementById('sellStockBtn');
+
+    // 初始化建筑
+    for (let i = 0; i < BUILDINGS.length; i++) {
+        buildings.push({
+            id: i,
+            name: BUILDINGS[i].name,
+            baseCps: BUILDINGS[i].baseCps,
+            basePrice: BUILDINGS[i].basePrice,
+            emoji: BUILDINGS[i].emoji,
+            desc: BUILDINGS[i].desc,
+            amount: 0
+        });
+    }
+
+    const PRICE_INCREASE = 1.15;
+
+    // 升级数据 (25个)
+    const UPGRADES = [
+        { id: 'u1', name: '双倍鸡蛋', desc: '点击产出翻倍', price: 100, bought: false, effect: 'clickMult', value: 2 },
+        { id: 'u2', name: '秘制酱料', desc: '所有摊位产出 +20%', price: 800, bought: false, effect: 'globalCpsMult', value: 1.2 },
+        { id: 'u3', name: '大妈培训', desc: '煎饼大妈效率翻倍', price: 2000, bought: false, effect: 'buildingMult', buildingId: 1, value: 2 },
+        { id: 'u4', name: '薄脆工艺', desc: '鸡蛋产出 +50%', price: 5000, bought: false, effect: 'buildingMult', buildingId: 0, value: 1.5 },
+        { id: 'u5', name: '自动化酱料', desc: '酱料工厂产量 +100%', price: 15000, bought: false, effect: 'buildingMult', buildingId: 4, value: 2 },
+        { id: 'u6', name: '金脆祈福', desc: '金脆煎饼出现概率 +50%', price: 40000, bought: false, effect: 'goldenFreq', value: 1.5 },
+        { id: 'u7', name: '银行复利', desc: '煎饼银行效率 +75%', price: 120000, bought: false, effect: 'buildingMult', buildingId: 5, value: 1.75 },
+        { id: 'u8', name: '辣条魔法', desc: '魔法塔产出 +125%', price: 500000, bought: false, effect: 'buildingMult', buildingId: 7, value: 2.25 },
+        { id: 'u9', name: '时空叠加', desc: '时光机产量 +150%', price: 2e6, bought: false, effect: 'buildingMult', buildingId: 11, value: 2.5 },
+        { id: 'u10', name: '反物质酱', desc: '反煎饼凝聚器产量 +200%', price: 1e7, bought: false, effect: 'buildingMult', buildingId: 12, value: 3 },
+        { id: 'u11', name: '棱镜聚焦', desc: '煎饼棱镜产量 +250%', price: 5e7, bought: false, effect: 'buildingMult', buildingId: 13, value: 3.5 },
+        { id: 'u12', name: '运气max', desc: '运气制造机产量 +300%', price: 2e8, bought: false, effect: 'buildingMult', buildingId: 14, value: 4 },
+        { id: 'u13', name: '分形递归', desc: '分形煎饼产量 +350%', price: 1e9, bought: false, effect: 'buildingMult', buildingId: 15, value: 4.5 },
+        { id: 'u14', name: '控制台指令', desc: '煎饼控制台产量 +400%', price: 5e9, bought: false, effect: 'buildingMult', buildingId: 16, value: 5 },
+        { id: 'u15', name: '多元宇宙论', desc: '多元宇宙产量 +450%', price: 2.5e10, bought: false, effect: 'buildingMult', buildingId: 17, value: 5.5 },
+        { id: 'u16', name: '意识觉醒', desc: '意识烤箱产量 +500%', price: 1.25e11, bought: false, effect: 'buildingMult', buildingId: 18, value: 6 },
+        { id: 'u17', name: '自我复制', desc: '你自己产量 +600%', price: 6.25e11, bought: false, effect: 'buildingMult', buildingId: 19, value: 7 },
+        { id: 'u18', name: '龙之吐息', desc: '煎饼龙加成 +0.2/级', price: 1e8, bought: false, effect: 'dragonBoost', value: 0.2 },
+        { id: 'u19', name: '龙鳞金脆', desc: '金脆煎饼价值翻倍', price: 5e8, bought: false, effect: 'goldenValue', value: 2 },
+        { id: 'u20', name: '内幕交易', desc: '股票波动更大但收益+30%', price: 2e9, bought: false, effect: 'stockBoost', value: 1.3 },
+        { id: 'u21', name: '春节buff', desc: '所有产出 +10%', price: 1e7, bought: false, effect: 'globalCpsMult', value: 1.1 },
+        { id: 'u22', name: '中秋月饼', desc: '金脆出现频率 +30%', price: 5e7, bought: false, effect: 'goldenFreq', value: 1.3 },
+        { id: 'u23', name: '端午粽子', desc: '点击产出 +100%', price: 2.5e8, bought: false, effect: 'clickMult', value: 2 },
+        { id: 'u24', name: '冬至饺子', desc: '所有建筑产量 +15%', price: 1.25e9, bought: false, effect: 'globalCpsMult', value: 1.15 },
+        { id: 'u25', name: '除夕烟火', desc: '金脆煎饼可能连出', price: 6.25e9, bought: false, effect: 'goldenDoubleChance', value: 0.2 }
+    ];
+
+    // 成就 (20个)
+    const ACHIEVEMENTS = [
+        { id: 'a1', name: '第一煎', desc: '拥有1个鸡蛋', condition: () => buildings[0].amount >= 1, achieved: false },
+        { id: 'a2', name: '大妈驾到', desc: '拥有5个煎饼大妈', condition: () => buildings[1].amount >= 5, achieved: false },
+        { id: 'a3', name: '工业化', desc: '拥有10个酱料工厂', condition: () => buildings[4].amount >= 10, achieved: false },
+        { id: 'a4', name: '银行家', desc: '拥有3个煎饼银行', condition: () => buildings[5].amount >= 3, achieved: false },
+        { id: 'a5', name: '魔法入门', desc: '拥有1个辣条魔法塔', condition: () => buildings[7].amount >= 1, achieved: false },
+        { id: 'a6', name: '煎饼殖民', desc: '总建筑数量达到50', condition: () => buildings.reduce((s, b) => s + b.amount, 0) >= 50, achieved: false },
+        { id: 'a7', name: '金脆眷顾', desc: '点击10次金脆煎饼', condition: () => goldenClicks >= 10, achieved: false },
+        { id: 'a8', name: '薄脆大师', desc: '累计煎饼达到100万', condition: () => jianbing >= 1e6, achieved: false },
+        { id: 'a9', name: '时间之主', desc: '拥有5个煎饼时光机', condition: () => buildings[11].amount >= 5, achieved: false },
+        { id: 'a10', name: '无限煎饼', desc: '每秒产出超过1亿', condition: () => totalCps >= 1e8, achieved: false },
+        { id: 'a11', name: '龙骑士', desc: '煎饼龙达到10级', condition: () => dragonLevel >= 10, achieved: false },
+        { id: 'a12', name: '股神', desc: '通过股票赚取1百万', condition: () => profitFromStock >= 1e6, achieved: false }, // 后面定义变量
+        { id: 'a13', name: '分形信徒', desc: '拥有10个分形煎饼', condition: () => buildings[15].amount >= 10, achieved: false },
+        { id: 'a14', name: '控制台黑客', desc: '拥有5个煎饼控制台', condition: () => buildings[16].amount >= 5, achieved: false },
+        { id: 'a15', name: '多元宇宙领主', desc: '拥有3个多元宇宙', condition: () => buildings[17].amount >= 3, achieved: false },
+        { id: 'a16', name: '意识超越', desc: '拥有2个意识烤箱', condition: () => buildings[18].amount >= 2, achieved: false },
+        { id: 'a17', name: '自我实现', desc: '拥有1个你自己', condition: () => buildings[19].amount >= 1, achieved: false },
+        { id: 'a18', name: '全知之眼', desc: '解锁20个升级', condition: () => upgrades.filter(u => u.bought).length >= 20, achieved: false },
+        { id: 'a19', name: '丰收之年', desc: '同时拥有春节、中秋、端午、冬至、除夕升级', condition: () => ['u21','u22','u23','u24','u25'].every(id => upgrades.find(u => u.id === id).bought), achieved: false },
+        { id: 'a20', name: '薄脆之神', desc: '总煎饼数达到1e12', condition: () => jianbing >= 1e12, achieved: false }
+    ];
+
+    let profitFromStock = 0; // 用于成就
+
+    // 辅助函数
+    function formatNumber(num) {
+        if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+        if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+        if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+        if (num >= 1e3) return (num / 1e3).toFixed(1) + 'k';
+        return Math.floor(num).toString();
+    }
+
+    function getPrice(building) {
+        return Math.floor(building.basePrice * Math.pow(PRICE_INCREASE, building.amount));
+    }
+
+    // 获取建筑倍率
+    function getBuildingMult(buildingId) {
+        let mult = 1;
+        for (let u of upgrades) {
+            if (u.bought && u.effect === 'buildingMult' && u.buildingId === buildingId) {
+                mult *= u.value;
+            }
+        }
+        return mult;
+    }
+
+    // 计算当前CPS
+    function calcCps() {
+        let cps = 0;
+        for (let b of buildings) {
+            let mult = getBuildingMult(b.id);
+            cps += b.baseCps * b.amount * mult;
+        }
+        // 全局乘数
+        for (let u of upgrades) {
+            if (u.bought && u.effect === 'globalCpsMult') {
+                cps *= u.value;
+            }
+        }
+        // 龙加成
+        let dragonBonus = 1 + dragonLevel * 0.1;
+        // 如果有龙之吐息，额外加成
+        let dragonBoostUp = upgrades.find(u => u.id === 'u18' && u.bought);
+        if (dragonBoostUp) dragonBonus += dragonLevel * 0.2;
+        cps *= dragonBonus;
+        totalCps = cps;
+        return cps;
+    }
+
+    // 购买建筑
+    function buyBuilding(index) {
+        let b = buildings[index];
+        let price = getPrice(b);
+        if (jianbing >= price) {
+            jianbing -= price;
+            b.amount += 1;
+            calcCps();
+            updateUI();
+            saveGame();
+            checkAchievements();
+        }
+    }
+
+    // 购买升级
+    function buyUpgrade(upgradeId) {
+        let up = upgrades.find(u => u.id === upgradeId);
+        if (!up || up.bought) return;
+        if (jianbing >= up.price) {
+            jianbing -= up.price;
+            up.bought = true;
+            calcCps();
+            updateUI();
+            saveGame();
+            renderUpgrades();
+            checkAchievements();
+        }
+    }
+
+    // 检查成就
+    function checkAchievements() {
+        for (let a of achievements) {
+            if (!a.achieved && a.condition()) {
+                a.achieved = true;
+                showAchievementPopup(a.name);
+            }
+        }
+        let achievedCount = achievements.filter(a => a.achieved).length;
+        achievementCountSpan.textContent = achievedCount;
+    }
+
+    function showAchievementPopup(name) {
+        achievementPopup.style.display = 'block';
+        achievementPopup.textContent = `🏆 解锁成就：${name}`;
+        setTimeout(() => {
+            achievementPopup.style.display = 'none';
+        }, 3000);
+    }
+
+    // 金脆煎饼 (降低出现频率)
+    function spawnGolden() {
+        if (goldenActive) return;
+        goldenActive = true;
+        messageEl.innerHTML = '✨ 金脆煎饼出现啦！快点击！ ✨';
+        let goldenBtn = document.createElement('div');
+        goldenBtn.id = 'goldenJianbing';
+        goldenBtn.style.position = 'absolute';
+        goldenBtn.style.left = Math.random() * 70 + '%';
+        goldenBtn.style.top = Math.random() * 40 + '%';
+        goldenBtn.style.width = '80px';
+        goldenBtn.style.height = '80px';
+        goldenBtn.style.background = 'radial-gradient(circle, #ffd966, #ffaa33)';
+        goldenBtn.style.borderRadius = '50%';
+        goldenBtn.style.boxShadow = '0 0 30px gold, 0 8px 0 #a76800';
+        goldenBtn.style.display = 'flex';
+        goldenBtn.style.alignItems = 'center';
+        goldenBtn.style.justifyContent = 'center';
+        goldenBtn.style.fontSize = '2.8rem';
+        goldenBtn.style.cursor = 'pointer';
+        goldenBtn.style.zIndex = '100';
+        goldenBtn.textContent = '🥟';
+        goldenBtn.addEventListener('click', function handler(e) {
+            e.stopPropagation();
+            let reward = 10 + Math.floor(Math.random() * 100) * totalCps * 0.5;
+            reward = Math.max(100, Math.floor(reward));
+            // 龙鳞金脆升级
+            let goldenValueUp = upgrades.find(u => u.id === 'u19' && u.bought);
+            if (goldenValueUp) reward *= goldenValueUp.value;
+            jianbing += reward;
+            goldenClicks++;
+            // 除夕烟火可能再生成一个
+            let doubleChanceUp = upgrades.find(u => u.id === 'u25' && u.bought);
+            if (doubleChanceUp && Math.random() < 0.2) {
+                setTimeout(() => spawnGolden(), 500);
+            }
+            goldenActive = false;
+            messageEl.innerHTML = '✨ 等待金脆煎饼...';
+            this.remove();
+            updateUI();
+            saveGame();
+            checkAchievements();
+        });
+        document.getElementById('leftClickZone').appendChild(goldenBtn);
+        goldenTimer = setTimeout(() => {
+            if (goldenActive) {
+                let el = document.getElementById('goldenJianbing');
+                if (el) el.remove();
+                goldenActive = false;
+                messageEl.innerHTML = '✨ 金脆消失了...';
+            }
+        }, 8000);
+    }
+
+    // 金脆生成概率 (调低基础概率)
+    function trySpawnGolden() {
+        if (goldenActive) return;
+        let freq = 0.003; // 基础0.3%
+        for (let u of upgrades) {
+            if (u.bought && u.effect === 'goldenFreq') {
+                freq *= u.value;
+            }
+        }
+        // 上限不超过5%
+        if (freq > 0.05) freq = 0.05;
+        if (Math.random() < freq) {
+            spawnGolden();
+        }
+    }
+
+    // 股票更新
+    function updateStock() {
+        let change = (Math.random() - 0.45) * 10; // 波动范围 -4.5 ~ +5.5
+        // 内幕交易升级增加波动收益
+        let stockBoostUp = upgrades.find(u => u.id === 'u20' && u.bought);
+        if (stockBoostUp) change *= 1.3;
+        stockPrice = Math.max(10, stockPrice + Math.floor(change));
+        stockPriceSpan.textContent = stockPrice;
+    }
+
+    // 股票买卖
+    function buyStock() {
+        let cost = stockPrice;
+        if (jianbing >= cost) {
+            jianbing -= cost;
+            stockOwned++;
+            stockOwnedSpan.textContent = stockOwned;
+            updateUI();
+            saveGame();
+        }
+    }
+    function sellStock() {
+        if (stockOwned > 0) {
+            let gain = stockPrice;
+            jianbing += gain;
+            profitFromStock += gain;
+            stockOwned--;
+            stockOwnedSpan.textContent = stockOwned;
+            updateUI();
+            saveGame();
+            checkAchievements();
+        }
+    }
+
+    // 煎饼龙喂食
+    function feedDragon() {
+        if (jianbing >= dragonFeedCost) {
+            jianbing -= dragonFeedCost;
+            dragonLevel++;
+            dragonLevelSpan.textContent = dragonLevel;
+            dragonFeedCost = Math.floor(dragonFeedCost * 1.5);
+            calcCps();
+            updateUI();
+            saveGame();
+            checkAchievements();
+        }
+    }
+
+    // 渲染建筑列表
+    function renderBuildings() {
+        let html = '';
+        for (let i = 0; i < buildings.length; i++) {
+            let b = buildings[i];
+            let price = getPrice(b);
+            html += `
+                <div class="buildingRow" data-id="${i}">
+                    <div class="buildingIcon">${b.emoji}</div>
+                    <div class="buildingInfo">
+                        <div class="buildingName">${b.name}</div>
+                        <div class="buildingDesc">${b.desc}</div>
+                    </div>
+                    <div class="buildingStats">
+                        <span>${b.amount}</span><br>
+                        <small>${(b.baseCps * getBuildingMult(i)).toFixed(1)}/s</small>
+                    </div>
+                    <div class="buildingPrice">
+                        🥞 <span>${formatNumber(price)}</span>
+                    </div>
+                    <div class="buyBtn" data-index="${i}">买</div>
+                </div>
+            `;
+        }
+        buildingContainer.innerHTML = html;
+        document.querySelectorAll('.buyBtn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                let index = btn.getAttribute('data-index');
+                if (index !== null) buyBuilding(parseInt(index));
+            });
+        });
+    }
+
+    // 渲染升级面板
+    function renderUpgrades() {
+        let upgradeDiv = document.getElementById('upgradePanel');
+        if (!upgradeDiv) {
+            upgradeDiv = document.createElement('div');
+            upgradeDiv.id = 'upgradePanel';
+            upgradeDiv.style.background = '#dbb47a';
+            upgradeDiv.style.borderRadius = '30px';
+            upgradeDiv.style.padding = '15px';
+            upgradeDiv.style.marginTop = '15px';
+            upgradeDiv.style.border = '3px solid #9e6d3b';
+            buildingContainer.parentNode.appendChild(upgradeDiv);
+        }
+        let html = '<h3 style="margin:0 0 10px; text-align:center;">🥫 秘方升级</h3>';
+        for (let u of upgrades) {
+            if (u.bought) continue;
+            html += `
+                <div style="display:flex; justify-content:space-between; background:#fff0d4; margin:8px 0; padding:8px 15px; border-radius:40px; align-items:center;">
+                    <div><strong>${u.name}</strong><br><small>${u.desc}</small></div>
+                    <div style="font-weight:bold; color:#b04f0a;">${formatNumber(u.price)} 🥞</div>
+                    <button class="buyUpgradeBtn" data-id="${u.id}" style="background:#f5b06b; border:none; border-radius:30px; padding:8px 20px; font-weight:bold; cursor:pointer;">研究</button>
+                </div>
+            `;
+        }
+        upgradeDiv.innerHTML = html;
+        document.querySelectorAll('.buyUpgradeBtn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                let id = btn.getAttribute('data-id');
+                buyUpgrade(id);
+            });
+        });
+    }
+
+    // 更新UI
+    function updateUI() {
+        jianbingSpan.textContent = formatNumber(jianbing);
+        cpsSpan.textContent = formatNumber(totalCps);
+        dragonLevelSpan.textContent = dragonLevel;
+        let dragonBonus = 1 + dragonLevel * 0.1;
+        if (upgrades.find(u => u.id === 'u18' && u.bought)) dragonBonus += dragonLevel * 0.2;
+        dragonMultSpan.textContent = dragonBonus.toFixed(2);
+        stockPriceSpan.textContent = stockPrice;
+        stockOwnedSpan.textContent = stockOwned;
+
+        for (let i = 0; i < buildings.length; i++) {
+            let b = buildings[i];
+            let row = document.querySelector(`.buildingRow[data-id="${i}"]`);
+            if (!row) continue;
+            let amountSpan = row.querySelector('.buildingStats span');
+            if (amountSpan) amountSpan.textContent = b.amount;
+            let priceSpan = row.querySelector('.buildingPrice span');
+            if (priceSpan) priceSpan.textContent = formatNumber(getPrice(b));
+            let btn = row.querySelector('.buyBtn');
+            if (jianbing < getPrice(b)) {
+                btn.classList.add('disabled');
+            } else {
+                btn.classList.remove('disabled');
+            }
+        }
+    }
+
+    // 保存/加载
+    const SAVE_KEY = 'jianbing_deep_save';
+
+    function saveGame() {
+        let data = {
+            jianbing: jianbing,
+            buildings: buildings.map(b => ({ amount: b.amount })),
+            upgrades: upgrades.map(u => ({ id: u.id, bought: u.bought })),
+            achievements: achievements.map(a => ({ id: a.id, achieved: a.achieved })),
+            goldenClicks: goldenClicks,
+            dragonLevel: dragonLevel,
+            stockPrice: stockPrice,
+            stockOwned: stockOwned,
+            profitFromStock: profitFromStock
+        };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+    }
+
+    function loadGame() {
+        try {
+            let raw = localStorage.getItem(SAVE_KEY);
+            if (!raw) return;
+            let data = JSON.parse(raw);
+            if (data.jianbing !== undefined) jianbing = data.jianbing;
+            if (data.buildings) {
+                for (let i = 0; i < data.buildings.length && i < buildings.length; i++) {
+                    if (data.buildings[i].amount !== undefined) buildings[i].amount = data.buildings[i].amount;
+                }
+            }
+            if (data.upgrades) {
+                for (let su of data.upgrades) {
+                    let u = upgrades.find(uu => uu.id === su.id);
+                    if (u) u.bought = su.bought;
+                }
+            }
+            if (data.achievements) {
+                for (let sa of data.achievements) {
+                    let a = achievements.find(aa => aa.id === sa.id);
+                    if (a) a.achieved = sa.achieved;
+                }
+            }
+            if (data.goldenClicks !== undefined) goldenClicks = data.goldenClicks;
+            if (data.dragonLevel !== undefined) dragonLevel = data.dragonLevel;
+            if (data.stockPrice !== undefined) stockPrice = data.stockPrice;
+            if (data.stockOwned !== undefined) stockOwned = data.stockOwned;
+            if (data.profitFromStock !== undefined) profitFromStock = data.profitFromStock;
+        } catch (e) {}
+        calcCps();
+    }
+
+    // 初始化升级和成就
+    upgrades = UPGRADES.slice();
+    achievements = ACHIEVEMENTS.slice();
+
+    // 启动
+    loadGame();
+    renderBuildings();
+    renderUpgrades();
+    calcCps();
+    updateUI();
+
+    // 事件监听
+    bigJianbing.addEventListener('click', (e) => {
+        e.preventDefault();
+        let clickValue = 1;
+        let clickMultUp = upgrades.find(u => u.effect === 'clickMult' && u.bought);
+        if (clickMultUp) clickValue *= clickMultUp.value;
+        jianbing += clickValue;
+        updateUI();
+        saveGame();
+        checkAchievements();
+    });
+
+    bigJianbing.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            jianbing += 1;
+            updateUI();
+            saveGame();
+            checkAchievements();
+        }
+    });
+
+    dragonBtn.addEventListener('click', feedDragon);
+    buyStockBtn.addEventListener('click', buyStock);
+    sellStockBtn.addEventListener('click', sellStock);
+
+    // 游戏循环
+    let lastUpdate = performance.now();
+    function gameLoop(now) {
+        let delta = (now - lastUpdate) / 1000;
+        if (delta >= 0.1) {
+            let increment = totalCps * delta;
+            jianbing += increment;
+            lastUpdate = now;
+            updateUI();
+        }
+        trySpawnGolden();
+        requestAnimationFrame(gameLoop);
+    }
+    requestAnimationFrame(gameLoop);
+
+    // 股票价格更新
+    setInterval(() => {
+        updateStock();
+    }, 5000);
+
+    setInterval(saveGame, 10000);
+    window.addEventListener('beforeunload', saveGame);
+
+    // 成就计数
+    let achievedCount = achievements.filter(a => a.achieved).length;
+    achievementCountSpan.textContent = achievedCount;
+})();
+</script>
+</body>
+</html>
